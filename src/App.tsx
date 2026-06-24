@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Download, Moon, Sun } from 'lucide-react';
+import { Download, Moon, Plus, Sun, Trash2 } from 'lucide-react';
 
 type Shape = 'rounded' | 'pill' | 'ellipse' | 'rectangle';
 type FillType = 'solid' | 'gradient';
@@ -11,6 +11,12 @@ interface Region {
   h: number;
 }
 
+interface GradientStop {
+  color: string;
+  position: number; // 0-100 %
+  opacity: number; // 0-100 %
+}
+
 interface Config {
   shape: Shape;
   contentWidth: number;
@@ -18,8 +24,9 @@ interface Config {
   cornerRadius: number;
   fillType: FillType;
   fillColor: string;
-  fillColor2: string;
-  gradientAngle: number;
+  fillOpacity: number;
+  gradientStops: GradientStop[];
+  gradientAngle: number; // CSS convention: 0deg = to top, 90deg = to right
   bgTransparent: boolean;
   backgroundColor: string;
   borderWidth: number;
@@ -49,6 +56,17 @@ function normalizeHex(s: string): string | null {
   if (/^[0-9a-f]{3}$/.test(v)) v = v.split('').map((c) => c + c).join('');
   if (/^[0-9a-f]{6}$/.test(v)) return '#' + v;
   return null;
+}
+
+function hexToRgb(hex: string) {
+  const n = normalizeHex(hex) ?? '#000000';
+  return { r: parseInt(n.slice(1, 3), 16), g: parseInt(n.slice(3, 5), 16), b: parseInt(n.slice(5, 7), 16) };
+}
+
+/** Build a canvas-/CSS-compatible rgba() string from a hex color and a 0-100 opacity. */
+function rgbaStr(hex: string, opacity: number) {
+  const { r, g, b } = hexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${clamp(opacity, 0, 100) / 100})`;
 }
 
 /** The radius actually used for the current shape (independent of the slider for pill/ellipse/rectangle). */
@@ -94,17 +112,29 @@ function shapePath(ctx: CanvasRenderingContext2D, shape: Shape, x: number, y: nu
   }
 }
 
-function makeGradient(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, angleDeg: number, c1: string, c2: string) {
+/**
+ * Multi-stop linear gradient using the CSS angle convention (0deg = to top, 90deg = to right),
+ * so values can be copied straight from Figma/CSS.
+ */
+function makeGradient(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, angleDeg: number, stops: GradientStop[]) {
   const a = (angleDeg * Math.PI) / 180;
+  const dirX = Math.sin(a);
+  const dirY = -Math.cos(a);
   const cx = x + w / 2;
   const cy = y + h / 2;
-  const dx = Math.cos(a);
-  const dy = Math.sin(a);
-  const half = Math.abs(dx) * (w / 2) + Math.abs(dy) * (h / 2);
-  const g = ctx.createLinearGradient(cx - dx * half, cy - dy * half, cx + dx * half, cy + dy * half);
-  g.addColorStop(0, c1);
-  g.addColorStop(1, c2);
+  const len = Math.abs(w * Math.sin(a)) + Math.abs(h * Math.cos(a));
+  const g = ctx.createLinearGradient(cx - (dirX * len) / 2, cy - (dirY * len) / 2, cx + (dirX * len) / 2, cy + (dirY * len) / 2);
+  const sorted = [...stops].sort((p, q) => p.position - q.position);
+  for (const s of sorted) {
+    g.addColorStop(clamp(s.position / 100, 0, 1), rgbaStr(s.color, s.opacity));
+  }
   return g;
+}
+
+function cssGradient(angle: number, stops: GradientStop[]) {
+  const sorted = [...stops].sort((p, q) => p.position - q.position);
+  const parts = sorted.map((s) => `${rgbaStr(s.color, s.opacity)} ${clamp(s.position, 0, 100)}%`);
+  return `linear-gradient(${angle}deg, ${parts.join(', ')})`;
 }
 
 const DEFAULT_CONFIG: Config = {
@@ -114,8 +144,12 @@ const DEFAULT_CONFIG: Config = {
   cornerRadius: 12,
   fillType: 'solid',
   fillColor: '#4caf50',
-  fillColor2: '#2e7d32',
-  gradientAngle: 90,
+  fillOpacity: 100,
+  gradientStops: [
+    { color: '#4caf50', position: 0, opacity: 100 },
+    { color: '#2e7d32', position: 100, opacity: 100 },
+  ],
+  gradientAngle: 180,
   bgTransparent: true,
   backgroundColor: '#000000',
   borderWidth: 0,
@@ -132,6 +166,14 @@ const DEFAULT_CONFIG: Config = {
 const inputCls =
   'w-full rounded border border-slate-300 bg-white px-3 py-2 text-slate-900 ' +
   'dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100';
+
+const barChecker: React.CSSProperties = {
+  backgroundImage:
+    'linear-gradient(45deg,#cbd5e1 25%,transparent 25%),linear-gradient(-45deg,#cbd5e1 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#cbd5e1 75%),linear-gradient(-45deg,transparent 75%,#cbd5e1 75%)',
+  backgroundSize: '10px 10px',
+  backgroundPosition: '0 0,0 5px,5px -5px,-5px 0px',
+  backgroundColor: '#fff',
+};
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -152,15 +194,12 @@ export default function App() {
   const radius = effectiveRadius(cfg.shape, cfg.contentWidth, cfg.contentHeight, cfg.cornerRadius);
   const maxRadius = Math.floor(Math.min(cfg.contentWidth, cfg.contentHeight) / 2);
 
-  // Effective regions: when "auto" is on they are derived live from the current
-  // geometry (so they follow radius/size/shape changes). Otherwise the stored values are used.
   const auto = autoRegion(cfg.shape, cfg.contentWidth, cfg.contentHeight, cfg.cornerRadius);
   const stretchRegion = cfg.stretchAuto ? auto : cfg.stretch;
   const contentRegion = cfg.contentAuto ? auto : cfg.content;
 
   const update = (patch: Partial<Config>) => setCfg((c) => ({ ...c, ...patch }));
 
-  // Resizing must re-clamp any manually-entered regions so the inputs and output stay in sync.
   const setDimension = (key: 'contentWidth' | 'contentHeight', v: number) =>
     setCfg((c) => {
       const next = { ...c, [key]: v };
@@ -169,7 +208,6 @@ export default function App() {
       return next;
     });
 
-  // Non-blocking warnings about export validity.
   const warnings: string[] = [];
   if (!cfg.stretchEnabled || stretchRegion.w <= 0 || stretchRegion.h <= 0) {
     warnings.push("No stretch markers in one or both axes — this won't scale as a 9-patch (strict tools reject it).");
@@ -190,10 +228,9 @@ export default function App() {
 
     const cw = cfg.contentWidth;
     const ch = cfg.contentHeight;
-    const ox = 1; // inner origin (the 9-patch frame is the outer 1px)
+    const ox = 1;
     const oy = 1;
 
-    // Background fills only the inner content area, never the 1px metadata frame.
     if (!cfg.bgTransparent) {
       ctx.fillStyle = cfg.backgroundColor;
       ctx.fillRect(ox, oy, cw, ch);
@@ -201,10 +238,9 @@ export default function App() {
 
     const paint = (x: number, y: number, w: number, h: number): string | CanvasGradient =>
       cfg.fillType === 'gradient'
-        ? makeGradient(ctx, x, y, w, h, cfg.gradientAngle, cfg.fillColor, cfg.fillColor2)
-        : cfg.fillColor;
+        ? makeGradient(ctx, x, y, w, h, cfg.gradientAngle, cfg.gradientStops)
+        : rgbaStr(cfg.fillColor, cfg.fillOpacity);
 
-    // Shape (with optional inside border)
     const bw = clamp(cfg.borderWidth, 0, Math.floor(Math.min(cw, ch) / 2));
     if (bw > 0) {
       ctx.fillStyle = cfg.borderColor;
@@ -219,23 +255,22 @@ export default function App() {
       ctx.fill();
     }
 
-    // 9-patch markers (pure black, inside the 1px frame, corners left clear)
     ctx.fillStyle = '#000000';
     if (cfg.stretchEnabled) {
       const sx = clamp(stretchRegion.x, 0, cw);
       const sw = clamp(stretchRegion.w, 0, cw - sx);
       const sy = clamp(stretchRegion.y, 0, ch);
       const sh = clamp(stretchRegion.h, 0, ch - sy);
-      if (sw > 0) ctx.fillRect(ox + sx, 0, sw, 1); // top -> horizontal stretch
-      if (sh > 0) ctx.fillRect(0, oy + sy, 1, sh); // left -> vertical stretch
+      if (sw > 0) ctx.fillRect(ox + sx, 0, sw, 1);
+      if (sh > 0) ctx.fillRect(0, oy + sy, 1, sh);
     }
     if (cfg.contentEnabled) {
       const cx = clamp(contentRegion.x, 0, cw);
       const cwid = clamp(contentRegion.w, 0, cw - cx);
       const cy = clamp(contentRegion.y, 0, ch);
       const cht = clamp(contentRegion.h, 0, ch - cy);
-      if (cwid > 0) ctx.fillRect(ox + cx, imageHeight - 1, cwid, 1); // bottom -> horizontal content
-      if (cht > 0) ctx.fillRect(imageWidth - 1, oy + cy, 1, cht); // right -> vertical content
+      if (cwid > 0) ctx.fillRect(ox + cx, imageHeight - 1, cwid, 1);
+      if (cht > 0) ctx.fillRect(imageWidth - 1, oy + cy, 1, cht);
     }
   }, [cfg, imageWidth, imageHeight, radius, stretchRegion, contentRegion]);
 
@@ -255,7 +290,6 @@ export default function App() {
     }, 'image/png');
   };
 
-  // Integer display scale so the small source image is visible and crisp.
   const displayScale = useMemo(() => {
     const target = 320;
     return Math.max(1, Math.floor(target / Math.max(imageWidth, imageHeight)));
@@ -296,11 +330,7 @@ export default function App() {
                   <canvas
                     ref={canvasRef}
                     className="block border border-slate-300/60 dark:border-slate-500/40"
-                    style={{
-                      width: imageWidth * displayScale,
-                      height: imageHeight * displayScale,
-                      imageRendering: 'pixelated',
-                    }}
+                    style={{ width: imageWidth * displayScale, height: imageHeight * displayScale, imageRendering: 'pixelated' }}
                   />
                 </div>
               </div>
@@ -321,13 +351,7 @@ export default function App() {
               <div className="mt-4">
                 <label className="mb-1 block text-sm text-slate-700 dark:text-slate-300">File name</label>
                 <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={cfg.fileName}
-                    onChange={(e) => update({ fileName: e.target.value })}
-                    className={inputCls}
-                    placeholder="nine_patch"
-                  />
+                  <input type="text" value={cfg.fileName} onChange={(e) => update({ fileName: e.target.value })} className={inputCls} placeholder="nine_patch" />
                   <span className="text-slate-500 dark:text-slate-400">.9.png</span>
                 </div>
               </div>
@@ -374,11 +398,18 @@ export default function App() {
                   <option value="gradient">Linear gradient</option>
                 </select>
               </Field>
-              <ColorField label={cfg.fillType === 'gradient' ? 'Gradient start' : 'Fill color'} value={cfg.fillColor} onChange={(v) => update({ fillColor: v })} />
-              {cfg.fillType === 'gradient' && (
+
+              {cfg.fillType === 'gradient' ? (
+                <GradientEditor
+                  stops={cfg.gradientStops}
+                  angle={cfg.gradientAngle}
+                  onAngle={(v) => update({ gradientAngle: v })}
+                  onChange={(stops) => update({ gradientStops: stops })}
+                />
+              ) : (
                 <div className="grid grid-cols-2 items-end gap-3">
-                  <ColorField label="Gradient end" value={cfg.fillColor2} onChange={(v) => update({ fillColor2: v })} />
-                  <NumberField label="Angle (°)" value={cfg.gradientAngle} min={0} max={360} onChange={(v) => update({ gradientAngle: v })} />
+                  <ColorField label="Fill color" value={cfg.fillColor} onChange={(v) => update({ fillColor: v })} />
+                  <NumberField label="Opacity (%)" value={cfg.fillOpacity} min={0} max={100} onChange={(v) => update({ fillOpacity: v })} />
                 </div>
               )}
 
@@ -448,21 +479,20 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 function NumberField({
-  label, value, onChange, min, max, disabled,
+  label, value, onChange, min, max, disabled, float,
 }: {
-  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; disabled?: boolean;
+  label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; disabled?: boolean; float?: boolean;
 }) {
-  // Local text state lets the field be empty/in-progress while typing; the parent
-  // is only updated with a real number, and clamping happens on blur (not per keystroke).
   const [text, setText] = useState(String(value));
   const [focused, setFocused] = useState(false);
+  const parse = (s: string) => (float ? parseFloat(s) : parseInt(s, 10));
 
   useEffect(() => {
     if (!focused) setText(String(value));
   }, [value, focused]);
 
   const commit = (raw: string) => {
-    let n = parseInt(raw, 10);
+    let n = parse(raw);
     if (!Number.isFinite(n)) n = min ?? 0;
     if (min !== undefined) n = Math.max(min, n);
     if (max !== undefined) n = Math.min(max, n);
@@ -474,7 +504,8 @@ function NumberField({
     <Field label={label}>
       <input
         type="number"
-        inputMode="numeric"
+        inputMode={float ? 'decimal' : 'numeric'}
+        step={float ? 'any' : 1}
         value={text}
         min={min}
         max={max}
@@ -483,8 +514,8 @@ function NumberField({
         onChange={(e) => {
           const raw = e.target.value;
           setText(raw);
-          if (raw === '' || raw === '-') return; // allow transient empty input
-          const n = parseInt(raw, 10);
+          if (raw === '' || raw === '-' || raw.endsWith('.')) return;
+          const n = parse(raw);
           if (!Number.isFinite(n)) return;
           onChange(max !== undefined ? Math.min(max, n) : n);
         }}
@@ -539,7 +570,7 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
               setText(n);
               onChange(n);
             } else {
-              setText(value); // revert invalid input
+              setText(value);
             }
           }}
           className={`${inputCls} ${invalid ? 'border-red-500 dark:border-red-500' : ''}`}
@@ -548,6 +579,68 @@ function ColorField({ label, value, onChange }: { label: string; value: string; 
       </div>
       {invalid && <p className="mt-1 text-xs text-red-500">Enter a hex color like #4CAF50 or #fff</p>}
     </Field>
+  );
+}
+
+function GradientEditor({
+  stops, angle, onAngle, onChange,
+}: {
+  stops: GradientStop[];
+  angle: number;
+  onAngle: (v: number) => void;
+  onChange: (stops: GradientStop[]) => void;
+}) {
+  const updateStop = (i: number, patch: Partial<GradientStop>) =>
+    onChange(stops.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+  const addStop = () => {
+    const last = stops[stops.length - 1];
+    onChange([...stops, { color: last?.color ?? '#000000', position: 100, opacity: last?.opacity ?? 100 }]);
+  };
+  const removeStop = (i: number) => {
+    if (stops.length > 2) onChange(stops.filter((_, idx) => idx !== i));
+  };
+
+  return (
+    <div className="space-y-3">
+      <NumberField label="Angle (°, CSS/Figma)" value={angle} min={0} max={360} float onChange={onAngle} />
+
+      <div className="rounded p-1" style={barChecker}>
+        <div className="h-6 w-full rounded" style={{ backgroundImage: cssGradient(angle, stops) }} />
+      </div>
+
+      <div className="space-y-2">
+        {stops.map((s, i) => (
+          <div key={i} className="rounded-md border border-slate-200 p-2 dark:border-slate-700">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300">Stop {i + 1}</span>
+              <button
+                type="button"
+                onClick={() => removeStop(i)}
+                disabled={stops.length <= 2}
+                aria-label={`Remove stop ${i + 1}`}
+                className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-red-500 disabled:opacity-30 dark:text-slate-400 dark:hover:bg-slate-700"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+            <ColorField label="Color" value={s.color} onChange={(v) => updateStop(i, { color: v })} />
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <NumberField label="Position (%)" value={s.position} min={0} max={100} float onChange={(v) => updateStop(i, { position: v })} />
+              <NumberField label="Opacity (%)" value={s.opacity} min={0} max={100} onChange={(v) => updateStop(i, { opacity: v })} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={addStop}
+        className="flex items-center gap-1 rounded border border-slate-300 px-3 py-1.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+      >
+        <Plus className="h-4 w-4" />
+        Add stop
+      </button>
+    </div>
   );
 }
 

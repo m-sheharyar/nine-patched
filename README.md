@@ -16,7 +16,7 @@ This lets a single small source image scale to any size while keeping rounded co
 ## Features
 
 * Shapes: rounded rectangle, pill, ellipse or circle, and plain rectangle.
-* Fill: solid color or linear gradient (two color stops with an adjustable angle).
+* Fill: solid color (with opacity), or a multi-stop linear gradient where every stop has its own position and opacity. Angles use the CSS and Figma convention, so values paste in directly.
 * Background: transparent or solid color.
 * Border: adjustable width and color, drawn inside the shape.
 * 9-patch regions: separate stretch and content/padding boxes, each with an Auto mode that follows the corner radius and size automatically.
