@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { normalizeHex } from '@/core';
 import { Field } from './Field';
-import { inputCls } from './styles';
+import { focusRing, inputCls } from './styles';
 
 interface ColorFieldProps {
   label: string;
@@ -25,7 +25,7 @@ export function ColorField({ label, value, onChange }: ColorFieldProps) {
     <Field label={label}>
       {(id) => (
         <>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <input
               type="color"
               aria-label={`${label} picker`}
@@ -34,11 +34,12 @@ export function ColorField({ label, value, onChange }: ColorFieldProps) {
                 setText(e.target.value);
                 onChange(e.target.value);
               }}
-              className="h-10 w-12 shrink-0 cursor-pointer rounded border border-slate-300 dark:border-slate-600"
+              className={`h-7 w-7 shrink-0 cursor-pointer rounded border border-zinc-300 dark:border-zinc-700 ${focusRing}`}
             />
             <input
               id={id}
               type="text"
+              spellCheck={false}
               value={text}
               onFocus={() => setFocused(true)}
               onChange={(e) => {
@@ -57,11 +58,15 @@ export function ColorField({ label, value, onChange }: ColorFieldProps) {
                   setText(value);
                 }
               }}
-              className={`${inputCls} ${invalid ? 'border-red-500 dark:border-red-500' : ''}`}
+              className={`${inputCls} w-full ${invalid ? 'border-amber-600 dark:border-amber-400' : ''}`}
               placeholder="#000000"
             />
           </div>
-          {invalid && <p className="mt-1 text-xs text-red-500">Enter a hex color like #4CAF50 or #fff</p>}
+          {invalid && (
+            <p className="mt-1 text-[11px] leading-4 text-zinc-700 dark:text-zinc-300">
+              Enter a hex color like #4CAF50 or #fff
+            </p>
+          )}
         </>
       )}
     </Field>

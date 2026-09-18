@@ -1,5 +1,7 @@
+import { Check } from 'lucide-react';
 import type { Region } from '@/core';
 import { NumberField } from './NumberField';
+import { checkboxCls, focusRing } from './styles';
 
 interface RegionEditorProps {
   title: string;
@@ -18,26 +20,32 @@ export function RegionEditor({
 }: RegionEditorProps) {
   const set = (patch: Partial<Region>) => onChange({ ...region, ...patch });
   return (
-    <div className="rounded-md border border-slate-200 p-3 dark:border-slate-700">
-      <div className="mb-3 flex items-center justify-between">
-        <label className="flex items-center gap-2 text-sm font-medium text-slate-800 dark:text-slate-200">
-          <input type="checkbox" checked={enabled} onChange={(e) => onToggleEnabled(e.target.checked)} className="h-4 w-4 cursor-pointer" />
+    <div className="rounded border border-zinc-200 p-2 dark:border-zinc-800">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <label className="flex min-w-0 cursor-pointer items-center gap-2 text-[12px] text-zinc-800 dark:text-zinc-200">
+          <input type="checkbox" checked={enabled} onChange={(e) => onToggleEnabled(e.target.checked)} className={checkboxCls} />
           {title}
         </label>
         <button
           type="button"
           onClick={() => onSetAuto(!auto)}
           disabled={!enabled}
-          className={`rounded border px-2 py-1 text-xs transition-colors disabled:opacity-40 ${
-            auto
-              ? 'border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900'
-              : 'border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-700'
-          }`}
+          aria-pressed={auto}
+          className={
+            'inline-flex h-6 shrink-0 items-center gap-1 rounded border px-1.5 text-[11px] transition-colors ' +
+            'disabled:pointer-events-none disabled:opacity-40 ' +
+            (auto
+              ? 'border-zinc-900 bg-zinc-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900'
+              : 'border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800') +
+            ' ' +
+            focusRing
+          }
         >
-          {auto ? 'Auto ✓' : 'Auto'}
+          {auto && <Check className="h-3 w-3" aria-hidden="true" />}
+          Auto
         </button>
       </div>
-      <div className={`grid grid-cols-2 gap-3 ${enabled ? '' : 'pointer-events-none opacity-40'}`}>
+      <div className={`grid grid-cols-2 gap-2 ${enabled ? '' : 'pointer-events-none opacity-40'}`}>
         <NumberField label="X" value={region.x} min={0} max={maxW} onChange={(v) => set({ x: v })} />
         <NumberField label="Y" value={region.y} min={0} max={maxH} onChange={(v) => set({ y: v })} />
         <NumberField label="Width" value={region.w} min={0} max={maxW} onChange={(v) => set({ w: v })} />

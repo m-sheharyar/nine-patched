@@ -1,9 +1,17 @@
 import { clamp, MAX_CONTENT_SIZE } from '@/core';
 import type { NinePatchConfig, Shape } from '@/core';
-import { Field } from './Field';
 import { NumberField } from './NumberField';
 import { Section } from './Section';
-import { inputCls } from './styles';
+import { SegmentedControl, type SegmentedOption } from './SegmentedControl';
+import { ShapeIcon } from './ShapeIcon';
+import { SliderField } from './SliderField';
+
+const SHAPES: SegmentedOption<Shape>[] = [
+  { value: 'rounded', label: 'Rounded rectangle', icon: <ShapeIcon shape="rounded" /> },
+  { value: 'pill', label: 'Pill', icon: <ShapeIcon shape="pill" /> },
+  { value: 'ellipse', label: 'Ellipse', icon: <ShapeIcon shape="ellipse" /> },
+  { value: 'rectangle', label: 'Rectangle', icon: <ShapeIcon shape="rectangle" /> },
+];
 
 interface GeometrySectionProps {
   config: NinePatchConfig;
@@ -14,28 +22,33 @@ interface GeometrySectionProps {
 }
 
 export function GeometrySection({ config, radius, maxRadius, onChange, onDimensionChange }: GeometrySectionProps) {
+  const rounded = config.shape === 'rounded';
   return (
     <Section title="Geometry">
-      <Field label="Shape">
-        {(id) => (
-          <select id={id} value={config.shape} onChange={(e) => onChange({ shape: e.target.value as Shape })} className={inputCls}>
-            <option value="rounded">Rounded rectangle</option>
-            <option value="pill">Pill (fully rounded)</option>
-            <option value="ellipse">Ellipse / circle</option>
-            <option value="rectangle">Rectangle</option>
-          </select>
-        )}
-      </Field>
-      <div className="grid grid-cols-2 gap-3">
-        <NumberField label="Width (px)" value={config.contentWidth} min={1} max={MAX_CONTENT_SIZE} onChange={(v) => onDimensionChange('contentWidth', v)} />
-        <NumberField label="Height (px)" value={config.contentHeight} min={1} max={MAX_CONTENT_SIZE} onChange={(v) => onDimensionChange('contentHeight', v)} />
+      <SegmentedControl label="Shape" value={config.shape} options={SHAPES} onChange={(shape) => onChange({ shape })} />
+      <div className="grid grid-cols-2 gap-2">
+        <NumberField
+          label="Width (px)"
+          value={config.contentWidth}
+          min={1}
+          max={MAX_CONTENT_SIZE}
+          onChange={(v) => onDimensionChange('contentWidth', v)}
+        />
+        <NumberField
+          label="Height (px)"
+          value={config.contentHeight}
+          min={1}
+          max={MAX_CONTENT_SIZE}
+          onChange={(v) => onDimensionChange('contentHeight', v)}
+        />
       </div>
-      <NumberField
-        label={`Corner radius (px)${config.shape !== 'rounded' ? ' — auto for this shape' : ''}`}
-        value={config.shape === 'rounded' ? clamp(config.cornerRadius, 0, maxRadius) : radius}
+      <SliderField
+        label={`Corner radius (px)${rounded ? '' : ' — auto for this shape'}`}
+        sliderLabel="Adjust corner radius"
+        value={rounded ? clamp(config.cornerRadius, 0, maxRadius) : radius}
         min={0}
         max={maxRadius}
-        disabled={config.shape !== 'rounded'}
+        disabled={!rounded}
         onChange={(v) => onChange({ cornerRadius: clamp(v, 0, maxRadius) })}
       />
     </Section>

@@ -29,6 +29,19 @@ const REGION_TITLES: Record<RegionKind, string> = {
   content: 'Content / padding region (bottom & right)',
 };
 
+/** Shape and fill type are segmented radio groups; these are the radios' accessible names. */
+const SHAPE_LABELS: Record<Shape, string> = {
+  rounded: 'Rounded rectangle',
+  pill: 'Pill',
+  ellipse: 'Ellipse',
+  rectangle: 'Rectangle',
+};
+
+const FILL_TYPE_LABELS: Record<FillType, string> = {
+  solid: 'Solid color',
+  gradient: 'Linear gradient',
+};
+
 /**
  * Page object for the nine-patched app. Selectors rely on `<label htmlFor>` association
  * (`getByLabel`) wherever the field has one, so they track the visible UI text rather than
@@ -68,9 +81,9 @@ export class AppPage {
     return this.page.getByLabel(/^Corner radius \(px\)/);
   }
 
-  /** All warnings currently shown under the preview (only warnings render as list items). */
+  /** All warnings currently shown in the workspace status line. */
   get warnings(): Locator {
-    return this.page.getByRole('listitem');
+    return this.page.getByRole('list', { name: 'Warnings' }).getByRole('listitem');
   }
 
   get addGradientStopButton(): Locator {
@@ -100,7 +113,7 @@ export class AppPage {
   }
 
   async setShape(shape: Shape): Promise<void> {
-    await this.page.getByLabel('Shape', { exact: true }).selectOption(shape);
+    await this.radio('Shape', SHAPE_LABELS[shape]).check();
   }
 
   /** Number fields commit on change and clamp to `min` on blur; fills then blurs both fields. */
@@ -114,7 +127,7 @@ export class AppPage {
   }
 
   async setFillType(type: FillType): Promise<void> {
-    await this.page.getByLabel('Fill type', { exact: true }).selectOption(type);
+    await this.radio('Fill type', FILL_TYPE_LABELS[type]).check();
   }
 
   async setFillColor(hex: string): Promise<void> {
@@ -204,6 +217,11 @@ export class AppPage {
 
   async themeStorage(): Promise<string | null> {
     return this.page.evaluate(() => localStorage.getItem('theme'));
+  }
+
+  /** One option of a segmented control; exact so "Rectangle" never matches "Rounded rectangle". */
+  private radio(group: string, option: string): Locator {
+    return this.page.getByRole('radiogroup', { name: group }).getByRole('radio', { name: option, exact: true });
   }
 
   /** The nearest ancestor `<div>` of a region editor's title that also contains its "X" field. */

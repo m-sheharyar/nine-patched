@@ -12,8 +12,9 @@ interface RegionsSectionProps {
 export function RegionsSection({ config, stretch, content, onChange }: RegionsSectionProps) {
   return (
     <Section title="9-Patch regions">
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        Coordinates are relative to the content area ({config.contentWidth} × {config.contentHeight}). The stretch box drives the top &amp; left markers; the content/padding box drives the bottom &amp; right markers. With <strong>Auto</strong> on, a box follows the corner radius and size automatically.
+      <p className="text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">
+        Coordinates are relative to the {config.contentWidth} × {config.contentHeight} artwork. Stretch drives the top
+        &amp; left markers, content/padding the bottom &amp; right. Auto follows the corner radius and size.
       </p>
 
       <RegionEditor

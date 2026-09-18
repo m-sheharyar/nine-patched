@@ -1,5 +1,6 @@
 import { useId } from 'react';
 import type { ReactNode } from 'react';
+import { labelCls } from './styles';
 
 interface FieldProps {
   label: string;
@@ -10,8 +11,8 @@ interface FieldProps {
 export function Field({ label, children }: FieldProps) {
   const id = useId();
   return (
-    <div>
-      <label htmlFor={id} className="mb-1 block text-sm text-slate-700 dark:text-slate-300">
+    <div className="min-w-0">
+      <label htmlFor={id} className={`${labelCls} mb-1`}>
         {label}
       </label>
       {children(id)}
