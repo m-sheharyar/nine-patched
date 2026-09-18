@@ -50,9 +50,7 @@ test('the corner radius field is enabled only for the rounded shape', async ({ p
   }
 });
 
-// Known bug: pill with even height has no vertical stretch marker (the pill radius always
-// consumes the entire smaller dimension, zeroing autoRegion's height on that axis).
-test.fail('pill 80x40 on Auto has a small vertical stretch marker centred on the shape', async ({ page }) => {
+test('pill 80x40 on Auto has a small vertical stretch marker centred on the shape', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.setShape('pill');
@@ -70,8 +68,7 @@ test.fail('pill 80x40 on Auto has a small vertical stretch marker centred on the
   await expect(app.warnings.filter({ hasText: 'No stretch markers' })).toHaveCount(0);
 });
 
-// Known bug: ellipse Auto region marks curved pixels as stretchable instead of a small centred run.
-test.fail('ellipse 100x50 on Auto has small centred top and left markers, no warning', async ({ page }) => {
+test('ellipse 100x50 on Auto has small centred top and left markers, no warning', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.setShape('ellipse');
@@ -95,8 +92,7 @@ test.fail('ellipse 100x50 on Auto has small centred top and left markers, no war
   await expect(app.warnings).toHaveCount(0);
 });
 
-// Known bug: a circle (ellipse with equal sides) on Auto gets no stretch markers at all.
-test.fail('circle 80x80 on Auto has small centred top and left markers, no warning', async ({ page }) => {
+test('circle 80x80 on Auto has small centred top and left markers, no warning', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.setShape('ellipse');
@@ -119,17 +115,14 @@ test.fail('circle 80x80 on Auto has small centred top and left markers, no warni
   await expect(app.warnings).toHaveCount(0);
 });
 
-// Known bug: NumberField only applies `min` on blur, not while typing, so the live-updated
-// canvas briefly (or indefinitely, if never blurred) reflects an out-of-range content size.
-test.fail('typing 0 into Width without blurring still keeps the canvas at the minimum size', async ({ page }) => {
+test('typing 0 into Width without blurring still keeps the canvas at the minimum size', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.widthField.fill('0');
   await expect(app.canvas).toHaveAttribute('width', '3');
 });
 
-// Known bug: same as above, for a negative value.
-test.fail('typing -5 into Width without blurring still keeps the canvas at the minimum size', async ({ page }) => {
+test('typing -5 into Width without blurring still keeps the canvas at the minimum size', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.widthField.fill('-5');

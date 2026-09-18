@@ -1,4 +1,4 @@
-import { clamp } from '@/core';
+import { clamp, MAX_CONTENT_SIZE } from '@/core';
 import type { NinePatchConfig, Shape } from '@/core';
 import { Field } from './Field';
 import { NumberField } from './NumberField';
@@ -27,8 +27,8 @@ export function GeometrySection({ config, radius, maxRadius, onChange, onDimensi
         )}
       </Field>
       <div className="grid grid-cols-2 gap-3">
-        <NumberField label="Width (px)" value={config.contentWidth} min={1} max={2000} onChange={(v) => onDimensionChange('contentWidth', v)} />
-        <NumberField label="Height (px)" value={config.contentHeight} min={1} max={2000} onChange={(v) => onDimensionChange('contentHeight', v)} />
+        <NumberField label="Width (px)" value={config.contentWidth} min={1} max={MAX_CONTENT_SIZE} onChange={(v) => onDimensionChange('contentWidth', v)} />
+        <NumberField label="Height (px)" value={config.contentHeight} min={1} max={MAX_CONTENT_SIZE} onChange={(v) => onDimensionChange('contentHeight', v)} />
       </div>
       <NumberField
         label={`Corner radius (px)${config.shape !== 'rounded' ? ' — auto for this shape' : ''}`}

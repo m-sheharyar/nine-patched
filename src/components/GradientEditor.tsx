@@ -1,6 +1,6 @@
 import { Plus, Trash2 } from 'lucide-react';
 import type { CSSProperties } from 'react';
-import { cssGradient, type GradientStop } from '@/core';
+import { cssGradient, insertGradientStop, type GradientStop } from '@/core';
 import { ColorField } from './ColorField';
 import { NumberField } from './NumberField';
 
@@ -22,10 +22,7 @@ interface GradientEditorProps {
 export function GradientEditor({ stops, angle, onAngle, onChange }: GradientEditorProps) {
   const updateStop = (i: number, patch: Partial<GradientStop>) =>
     onChange(stops.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
-  const addStop = () => {
-    const last = stops[stops.length - 1];
-    onChange([...stops, { color: last?.color ?? '#000000', position: 100, opacity: last?.opacity ?? 100 }]);
-  };
+  const addStop = () => onChange(insertGradientStop(stops));
   const removeStop = (i: number) => {
     if (stops.length > 2) onChange(stops.filter((_, idx) => idx !== i));
   };

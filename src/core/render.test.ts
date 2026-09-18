@@ -7,12 +7,11 @@ import { renderNinePatch } from './render';
 import type { NinePatchConfig, NinePatchContext } from './types';
 
 type FillStyleValue = NinePatchContext['fillStyle'];
+type CompositeValue = NinePatchContext['globalCompositeOperation'];
 
-interface SetEvent {
-  kind: 'set';
-  prop: 'fillStyle';
-  value: FillStyleValue;
-}
+type SetEvent =
+  | { kind: 'set'; prop: 'fillStyle'; value: FillStyleValue }
+  | { kind: 'set'; prop: 'globalCompositeOperation'; value: CompositeValue };
 
 interface CallEvent {
   kind: 'call';
@@ -20,6 +19,8 @@ interface CallEvent {
   args: unknown[];
   /** fillStyle in effect at the moment this call was made. */
   fillStyle: FillStyleValue;
+  /** globalCompositeOperation in effect at the moment this call was made. */
+  composite: CompositeValue;
 }
 
 type Event = SetEvent | CallEvent;
@@ -34,9 +35,10 @@ function createRecordingContext() {
   const events: Event[] = [];
   const gradients: RecordedGradient[] = [];
   let currentFillStyle: FillStyleValue = '#000000';
+  let currentComposite: CompositeValue = 'source-over';
 
   const call = (name: string, args: unknown[]) => {
-    events.push({ kind: 'call', name, args, fillStyle: currentFillStyle });
+    events.push({ kind: 'call', name, args, fillStyle: currentFillStyle, composite: currentComposite });
   };
 
   const ctx: NinePatchContext = {
@@ -46,6 +48,13 @@ function createRecordingContext() {
     set fillStyle(value: FillStyleValue) {
       currentFillStyle = value;
       events.push({ kind: 'set', prop: 'fillStyle', value });
+    },
+    get globalCompositeOperation() {
+      return currentComposite;
+    },
+    set globalCompositeOperation(value: CompositeValue) {
+      currentComposite = value;
+      events.push({ kind: 'set', prop: 'globalCompositeOperation', value });
     },
     clearRect: (x: number, y: number, w: number, h: number) => call('clearRect', [x, y, w, h]),
     fillRect: (x: number, y: number, w: number, h: number) => call('fillRect', [x, y, w, h]),
@@ -71,14 +80,23 @@ function createRecordingContext() {
 
 const cfg = (overrides: Partial<NinePatchConfig>): NinePatchConfig => ({ ...DEFAULT_CONFIG, ...overrides });
 
-const fillRectCalls = (events: Event[]) =>
-  events.filter((e): e is CallEvent => e.kind === 'call' && e.name === 'fillRect');
+const callEvents = (events: Event[]) => events.filter((e): e is CallEvent => e.kind === 'call');
+
+const fillRectCalls = (events: Event[]) => callEvents(events).filter((e) => e.name === 'fillRect');
+
+const fillCalls = (events: Event[]) => callEvents(events).filter((e) => e.name === 'fill');
 
 describe('renderNinePatch', () => {
   it('clears the full image before drawing anything', () => {
     const { ctx, events } = createRecordingContext();
     renderNinePatch(ctx, DEFAULT_CONFIG);
-    expect(events[0]).toEqual({ kind: 'call', name: 'clearRect', args: [0, 0, 82, 82], fillStyle: '#000000' });
+    expect(events[0]).toEqual({
+      kind: 'call',
+      name: 'clearRect',
+      args: [0, 0, 82, 82],
+      fillStyle: '#000000',
+      composite: 'source-over',
+    });
   });
 
   it('draws exactly the expected marker fillRects for the default config, in black', () => {
@@ -94,6 +112,7 @@ describe('renderNinePatch', () => {
     ]);
     for (const e of fillRectCalls(events)) {
       expect(e.fillStyle).toBe('#000000');
+      expect(e.composite).toBe('source-over');
     }
   });
 
@@ -119,7 +138,7 @@ describe('renderNinePatch', () => {
     expect(fillRectCalls(events)).toEqual([]);
   });
 
-  it('fillRects the background in the background color when bgTransparent is false', () => {
+  it('fillRects the background behind everything else when bgTransparent is false', () => {
     const { ctx, events } = createRecordingContext();
     renderNinePatch(
       ctx,
@@ -129,24 +148,50 @@ describe('renderNinePatch', () => {
     expect(calls).toHaveLength(1);
     expect(calls[0].args).toEqual([1, 1, 80, 80]);
     expect(calls[0].fillStyle).toBe('#123456');
+    // Drawn after the shape, with destination-over, so it ends up underneath it.
+    expect(calls[0].composite).toBe('destination-over');
+    const all = callEvents(events);
+    expect(all.indexOf(calls[0])).toBeGreaterThan(all.findIndex((e) => e.name === 'fill'));
   });
 
-  it('draws the border path and fills it before the inner fill, when borderWidth > 0', () => {
+  it('draws the border as a ring: outer shape, inner shape punched out, fill added back', () => {
     const { ctx, events } = createRecordingContext();
     renderNinePatch(ctx, cfg({ borderWidth: 4, borderColor: '#ff0000', fillColor: '#0000ff', fillOpacity: 100 }));
 
-    const calls = events.filter((e): e is CallEvent => e.kind === 'call');
-    const fillIndices = calls.map((e, i) => ({ e, i })).filter(({ e }) => e.name === 'fill').map(({ i }) => i);
-    expect(fillIndices).toHaveLength(2);
+    const calls = callEvents(events);
+    const fills = fillCalls(events);
+    expect(fills).toHaveLength(3);
 
     const firstBeginPathIndex = calls.findIndex((e) => e.name === 'beginPath');
     expect(firstBeginPathIndex).toBeGreaterThanOrEqual(0);
-    expect(firstBeginPathIndex).toBeLessThan(fillIndices[0]);
+    expect(firstBeginPathIndex).toBeLessThan(calls.indexOf(fills[0]));
 
-    // First fill: the full (un-inset) shape, painted with the border color.
-    expect(calls[fillIndices[0]].fillStyle).toBe('#ff0000');
-    // Second fill: the inset shape, painted with the resolved fill color.
-    expect(calls[fillIndices[1]].fillStyle).toBe(rgbaStr('#0000ff', 100));
+    // The full (un-inset) shape, painted with the border color.
+    expect(fills[0].fillStyle).toBe('#ff0000');
+    expect(fills[0].composite).toBe('source-over');
+    // The inset shape, cleared so no border color is left under the fill.
+    expect(fills[1].composite).toBe('destination-out');
+    // The inset shape again, added so the two anti-aliased edges sum to full alpha.
+    expect(fills[2].composite).toBe('lighter');
+    expect(fills[2].fillStyle).toBe(rgbaStr('#0000ff', 100));
+  });
+
+  it('restores source-over before drawing the markers, border or not', () => {
+    for (const borderWidth of [0, 4]) {
+      const { ctx, events } = createRecordingContext();
+      renderNinePatch(ctx, cfg({ borderWidth, bgTransparent: false, backgroundColor: '#123456' }));
+      const markers = fillRectCalls(events).filter((e) => e.fillStyle === '#000000');
+      expect(markers).toHaveLength(4);
+      for (const marker of markers) expect(marker.composite).toBe('source-over');
+    }
+  });
+
+  it('paints a fully transparent fill without ever putting the border color underneath it', () => {
+    const { ctx, events } = createRecordingContext();
+    renderNinePatch(ctx, cfg({ borderWidth: 4, borderColor: '#ff0000', fillColor: '#0000ff', fillOpacity: 0 }));
+    const fills = fillCalls(events);
+    expect(fills[1].composite).toBe('destination-out');
+    expect(fills[2].fillStyle).toBe(rgbaStr('#0000ff', 0));
   });
 
   it('draws a single fill when borderWidth is 0', () => {

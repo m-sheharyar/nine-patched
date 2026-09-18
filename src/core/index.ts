@@ -1,8 +1,8 @@
-export { hexToRgb, normalizeHex, rgbaStr } from './color';
+export { hexToRgb, mixHex, normalizeHex, rgbaStr } from './color';
 export { DEFAULT_CONFIG, DEFAULT_FILE_NAME } from './defaults';
-export { autoRegion, effectiveRadius, resolveNinePatch } from './geometry';
+export { autoContentRegion, autoStretchRegion, effectiveRadius, MAX_CONTENT_SIZE, resolveNinePatch } from './geometry';
 export type { ResolvedNinePatch } from './geometry';
-export { cssGradient, gradientLine, makeGradient, sortedStops } from './gradient';
+export { cssGradient, gradientLine, insertGradientStop, makeGradient, sortedStops } from './gradient';
 export type { GradientLine } from './gradient';
 export { clamp, clampRegion } from './math';
 export { renderNinePatch } from './render';

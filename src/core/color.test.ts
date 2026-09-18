@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hexToRgb, normalizeHex, rgbaStr } from './color';
+import { hexToRgb, mixHex, normalizeHex, rgbaStr } from './color';
 
 describe('normalizeHex', () => {
   it.each([
@@ -43,5 +43,24 @@ describe('rgbaStr', () => {
     ['opacity at 100', 100, 'rgba(76, 175, 80, 1)'],
   ])('%s: rgbaStr(#4caf50, %p) === %p', (_name, opacity, expected) => {
     expect(rgbaStr('#4caf50', opacity)).toBe(expected);
+  });
+});
+
+describe('mixHex', () => {
+  it.each([
+    ['t = 0 returns the first color', '#ff0000', '#0000ff', 0, '#ff0000'],
+    ['t = 1 returns the second color', '#ff0000', '#0000ff', 1, '#0000ff'],
+    ['t = 0.5 is the midpoint', '#ff0000', '#0000ff', 0.5, '#800080'],
+    ['rounds each channel to an integer', '#000000', '#010101', 0.5, '#010101'],
+    ['t below 0 clamps to the first color', '#ff0000', '#0000ff', -1, '#ff0000'],
+    ['t above 1 clamps to the second color', '#ff0000', '#0000ff', 2, '#0000ff'],
+    ['pads single-digit channels', '#000000', '#0a141e', 1, '#0a141e'],
+    ['an invalid color is treated as black', 'nope', '#ffffff', 0.5, '#808080'],
+  ])('%s', (_name, from, to, t, expected) => {
+    expect(mixHex(from, to, t)).toBe(expected);
+  });
+
+  it('accepts shorthand hex on either side', () => {
+    expect(mixHex('#f00', '#00f', 0.5)).toBe('#800080');
   });
 });

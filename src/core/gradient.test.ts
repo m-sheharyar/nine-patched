@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { cssGradient, gradientLine, sortedStops } from './gradient';
+import { cssGradient, gradientLine, insertGradientStop, sortedStops } from './gradient';
 import type { GradientStop } from './types';
 
 describe('gradientLine', () => {
@@ -73,6 +73,72 @@ describe('sortedStops', () => {
     const result = sortedStops(stops);
     expect(stops).toEqual(snapshot);
     expect(result).not.toBe(stops);
+  });
+});
+
+describe('insertGradientStop', () => {
+  it('splits the only gap at its midpoint, interpolating color and opacity', () => {
+    const stops: GradientStop[] = [
+      { color: '#ff0000', position: 0, opacity: 100 },
+      { color: '#0000ff', position: 100, opacity: 40 },
+    ];
+    expect(insertGradientStop(stops)).toEqual([
+      { color: '#ff0000', position: 0, opacity: 100 },
+      { color: '#800080', position: 50, opacity: 70 },
+      { color: '#0000ff', position: 100, opacity: 40 },
+    ]);
+  });
+
+  it('picks the widest gap, not the last one', () => {
+    const stops: GradientStop[] = [
+      { color: '#000000', position: 0, opacity: 100 },
+      { color: '#ffffff', position: 80, opacity: 100 },
+      { color: '#ffffff', position: 100, opacity: 100 },
+    ];
+    expect(insertGradientStop(stops).map((s) => s.position)).toEqual([0, 40, 80, 100]);
+  });
+
+  it('sorts unordered stops before choosing the gap', () => {
+    const stops: GradientStop[] = [
+      { color: '#0000ff', position: 100, opacity: 100 },
+      { color: '#ff0000', position: 0, opacity: 100 },
+    ];
+    expect(insertGradientStop(stops).map((s) => s.position)).toEqual([0, 50, 100]);
+  });
+
+  it('rounds interpolated opacity to an integer', () => {
+    const stops: GradientStop[] = [
+      { color: '#000000', position: 0, opacity: 0 },
+      { color: '#000000', position: 100, opacity: 25 },
+    ];
+    expect(insertGradientStop(stops)[1].opacity).toBe(13);
+  });
+
+  it('never repeats an existing position when every stop is distinct', () => {
+    let stops: GradientStop[] = [
+      { color: '#ff0000', position: 0, opacity: 100 },
+      { color: '#0000ff', position: 100, opacity: 100 },
+    ];
+    for (let i = 0; i < 5; i++) stops = insertGradientStop(stops);
+    const positions = stops.map((s) => s.position);
+    expect(new Set(positions).size).toBe(positions.length);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+  });
+
+  it('does not mutate the input array', () => {
+    const stops: GradientStop[] = [
+      { color: '#ff0000', position: 0, opacity: 100 },
+      { color: '#0000ff', position: 100, opacity: 100 },
+    ];
+    const snapshot = stops.map((s) => ({ ...s }));
+    insertGradientStop(stops);
+    expect(stops).toEqual(snapshot);
+  });
+
+  it('returns the stops untouched when there is no gap to split', () => {
+    const single: GradientStop[] = [{ color: '#ff0000', position: 0, opacity: 100 }];
+    expect(insertGradientStop(single)).toEqual(single);
+    expect(insertGradientStop([])).toEqual([]);
   });
 });
 

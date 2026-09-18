@@ -1,4 +1,4 @@
-import { rgbaStr } from './color';
+import { mixHex, rgbaStr } from './color';
 import { clamp } from './math';
 import type { GradientStop, NinePatchContext } from './types';
 
@@ -32,6 +32,35 @@ export function gradientLine(x: number, y: number, w: number, h: number, angleDe
 
 export function sortedStops(stops: GradientStop[]): GradientStop[] {
   return [...stops].sort((p, q) => p.position - q.position);
+}
+
+/**
+ * Sorted stops with one more stop halfway across the widest gap, blended from the two stops it
+ * sits between, so adding a stop never lands on a position another stop already occupies.
+ * Returns the stops untouched when there is no gap to split (fewer than two stops).
+ */
+export function insertGradientStop(stops: GradientStop[]): GradientStop[] {
+  const sorted = sortedStops(stops);
+  if (sorted.length < 2) return sorted;
+
+  let at = 0;
+  let widest = -Infinity;
+  for (let i = 0; i < sorted.length - 1; i++) {
+    const gap = sorted[i + 1].position - sorted[i].position;
+    if (gap > widest) {
+      widest = gap;
+      at = i;
+    }
+  }
+
+  const before = sorted[at];
+  const after = sorted[at + 1];
+  const mid: GradientStop = {
+    color: mixHex(before.color, after.color, 0.5),
+    position: (before.position + after.position) / 2,
+    opacity: Math.round((before.opacity + after.opacity) / 2),
+  };
+  return [...sorted.slice(0, at + 1), mid, ...sorted.slice(at + 1)];
 }
 
 export function makeGradient(

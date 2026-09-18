@@ -21,9 +21,8 @@ test('an empty file name falls back to nine_patch.9.png', async ({ page }) => {
   expect(suggestedFilename).toBe('nine_patch.9.png');
 });
 
-// The app itself never sanitises the file name (see downloadCanvasAsPng.ts) — this currently
-// passes only because Chromium sanitises '/' and ':' out of the `download` attribute itself
-// before the download fires. Not marked as a known-bug test; see the report for details.
+// Sanitised by the app (see sanitizeFileName.ts) rather than by the browser: Chromium happens to
+// strip '/' and ':' from the `download` attribute too, so this only proves the combined result.
 test('a file name with path separators and a colon is sanitised on download', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
@@ -33,9 +32,7 @@ test('a file name with path separators and a colon is sanitised on download', as
   expect(suggestedFilename).toBe('my_asset_v2.9.png');
 });
 
-// Known bug: `fileName || DEFAULT_FILE_NAME` treats a whitespace-only string as truthy, so it
-// is used as-is instead of falling back to the default.
-test.fail('a whitespace-only file name falls back to nine_patch.9.png', async ({ page }) => {
+test('a whitespace-only file name falls back to nine_patch.9.png', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.setFileName('   ');

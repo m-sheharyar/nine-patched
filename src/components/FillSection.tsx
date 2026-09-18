@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { FillType, NinePatchConfig } from '@/core';
 import { ColorField } from './ColorField';
 import { Field } from './Field';
@@ -13,6 +14,8 @@ interface FillSectionProps {
 }
 
 export function FillSection({ config, maxRadius, onChange }: FillSectionProps) {
+  const bgTransparentId = useId();
+
   return (
     <Section title="Fill, background & border">
       <Field label="Fill type">
@@ -39,8 +42,8 @@ export function FillSection({ config, maxRadius, onChange }: FillSectionProps) {
       )}
 
       <div className="flex items-center gap-2">
-        <input id="bg-transparent" type="checkbox" checked={config.bgTransparent} onChange={(e) => onChange({ bgTransparent: e.target.checked })} className="h-4 w-4 cursor-pointer" />
-        <label htmlFor="bg-transparent" className="text-sm text-slate-700 dark:text-slate-300">Transparent background</label>
+        <input id={bgTransparentId} type="checkbox" checked={config.bgTransparent} onChange={(e) => onChange({ bgTransparent: e.target.checked })} className="h-4 w-4 cursor-pointer" />
+        <label htmlFor={bgTransparentId} className="text-sm text-slate-700 dark:text-slate-300">Transparent background</label>
       </div>
       {!config.bgTransparent && <ColorField label="Background color" value={config.backgroundColor} onChange={(v) => onChange({ backgroundColor: v })} />}
 

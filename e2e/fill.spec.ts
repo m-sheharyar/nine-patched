@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { AppPage } from './support/app';
-import { assertValidNinePatch, getPixel } from './support/ninePatch';
+import { assertValidNinePatch, getPixel, type DecodedPng } from './support/ninePatch';
 
 test.use({ colorScheme: 'light' });
 
@@ -64,10 +64,7 @@ test.describe('border', () => {
   });
 });
 
-// Known bug: the border is drawn as a full solid shape and the (possibly translucent) fill is
-// painted on top of it, so a transparent/translucent fill lets the opaque border colour show
-// through the centre instead of the background.
-test.fail('a fully transparent fill does not show the border colour through the centre', async ({ page }) => {
+test('a fully transparent fill does not show the border colour through the centre', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.setShape('rounded');
@@ -82,9 +79,7 @@ test.fail('a fully transparent fill does not show the border colour through the 
   expect(getPixel(png, 3, 41)).toEqual({ r: 255, g: 0, b: 0, a: 255 });
 });
 
-// Known bug: same underlying cause — at 50% fill opacity the centre still has red mixed in
-// from the opaque border shape underneath.
-test.fail('a 50%-opacity fill has no red mixed in at the centre', async ({ page }) => {
+test('a 50%-opacity fill has no red mixed in at the centre', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
   await app.setShape('rounded');
@@ -96,6 +91,59 @@ test.fail('a 50%-opacity fill has no red mixed in at the centre', async ({ page 
 
   const { png } = await app.downloadNinePatch();
   expect(getPixel(png, 41, 41).r).toBe(0);
+});
+
+test.describe('border ring seam', () => {
+  /** Alpha along the diagonal from the content corner (1,1) inwards to the centre. */
+  const diagonalAlphas = (png: DecodedPng) => {
+    const alphas: number[] = [];
+    for (let i = 1; i <= 41; i++) alphas.push(getPixel(png, i, i).a);
+    return alphas;
+  };
+
+  const setUpRing = async (app: AppPage, transparentBackground: boolean) => {
+    await app.goto();
+    await app.setShape('rounded');
+    await app.setSize(80, 80);
+    await app.setCornerRadius(40);
+    await app.setBackground(transparentBackground ? { transparent: true } : { transparent: false, color: '#112233' });
+    await app.setFillColor('#0000ff');
+    await app.setFillOpacity(100);
+    await app.setBorder(6, '#ff0000');
+  };
+
+  test('alpha never dips where the ring meets the fill on a curved edge', async ({ page }) => {
+    const app = new AppPage(page);
+    await setUpRing(app, true);
+
+    const { png } = await app.downloadNinePatch();
+    const alphas = diagonalAlphas(png);
+
+    for (let i = 1; i < alphas.length; i++) {
+      expect(alphas[i], `alpha dipped at diagonal pixel ${i + 1}: ${alphas.join(',')}`).toBeGreaterThanOrEqual(
+        alphas[i - 1],
+      );
+    }
+
+    const firstOpaque = alphas.indexOf(255);
+    expect(firstOpaque, `never reached full alpha: ${alphas.join(',')}`).toBeGreaterThanOrEqual(0);
+    for (const a of alphas.slice(firstOpaque)) expect(a).toBe(255);
+  });
+
+  test('every content pixel is fully opaque over a solid background', async ({ page }) => {
+    const app = new AppPage(page);
+    await setUpRing(app, false);
+
+    const { png } = await app.downloadNinePatch();
+    const translucent: string[] = [];
+    for (let y = 1; y <= 80; y++) {
+      for (let x = 1; x <= 80; x++) {
+        const { a } = getPixel(png, x, y);
+        if (a !== 255) translucent.push(`(${x},${y})=${a}`);
+      }
+    }
+    expect(translucent).toEqual([]);
+  });
 });
 
 test.describe('gradient', () => {

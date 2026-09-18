@@ -11,18 +11,11 @@ import type { NinePatchConfig, NinePatchContext } from './types';
  * imageWidth x imageHeight is the caller's job.
  */
 export function renderNinePatch(ctx: NinePatchContext, config: NinePatchConfig): void {
-  const { imageWidth, imageHeight, radius, stretch, content } = resolveNinePatch(config);
+  const { contentWidth: cw, contentHeight: ch, imageWidth, imageHeight, radius, stretch, content } = resolveNinePatch(config);
   ctx.clearRect(0, 0, imageWidth, imageHeight);
 
-  const cw = config.contentWidth;
-  const ch = config.contentHeight;
   const ox = 1;
   const oy = 1;
-
-  if (!config.bgTransparent) {
-    ctx.fillStyle = config.backgroundColor;
-    ctx.fillRect(ox, oy, cw, ch);
-  }
 
   const paint = (x: number, y: number, w: number, h: number): string | CanvasGradient =>
     config.fillType === 'gradient'
@@ -31,17 +24,34 @@ export function renderNinePatch(ctx: NinePatchContext, config: NinePatchConfig):
 
   const bw = clamp(config.borderWidth, 0, Math.floor(Math.min(cw, ch) / 2));
   if (bw > 0) {
+    const iw = cw - 2 * bw;
+    const ih = ch - 2 * bw;
+    // The border is a ring, so a translucent fill never picks up the border colour. The inner
+    // shape is punched out and the fill added back with 'lighter' rather than drawn over the
+    // hole: on a curved edge the two complementary coverages then sum to full alpha, where
+    // source-over would leave a visible anti-aliasing seam.
     ctx.fillStyle = config.borderColor;
     shapePath(ctx, config.shape, ox, oy, cw, ch, radius);
     ctx.fill();
-    ctx.fillStyle = paint(ox + bw, oy + bw, cw - 2 * bw, ch - 2 * bw);
-    shapePath(ctx, config.shape, ox + bw, oy + bw, cw - 2 * bw, ch - 2 * bw, Math.max(0, radius - bw));
+    shapePath(ctx, config.shape, ox + bw, oy + bw, iw, ih, Math.max(0, radius - bw));
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = paint(ox + bw, oy + bw, iw, ih);
     ctx.fill();
   } else {
     ctx.fillStyle = paint(ox, oy, cw, ch);
     shapePath(ctx, config.shape, ox, oy, cw, ch, radius);
     ctx.fill();
   }
+
+  if (!config.bgTransparent) {
+    // Painted last and underneath: drawn first, the ring's destination-out would erase it.
+    ctx.globalCompositeOperation = 'destination-over';
+    ctx.fillStyle = config.backgroundColor;
+    ctx.fillRect(ox, oy, cw, ch);
+  }
+  ctx.globalCompositeOperation = 'source-over';
 
   ctx.fillStyle = '#000000';
   if (config.stretchEnabled) {

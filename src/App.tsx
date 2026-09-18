@@ -9,6 +9,7 @@ import type { NinePatchConfig } from '@/core';
 import { useNinePatchCanvas } from '@/hooks/useNinePatchCanvas';
 import { useTheme } from '@/hooks/useTheme';
 import { downloadCanvasAsPng } from '@/lib/downloadCanvasAsPng';
+import { sanitizeFileName } from '@/lib/sanitizeFileName';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -34,7 +35,7 @@ export default function App() {
   const downloadImage = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    downloadCanvasAsPng(canvas, `${fileName || DEFAULT_FILE_NAME}.9.png`);
+    downloadCanvasAsPng(canvas, `${sanitizeFileName(fileName, DEFAULT_FILE_NAME)}.9.png`);
   };
 
   return (

@@ -21,13 +21,18 @@ export function NumberField({ label, value, onChange, min, max, disabled, float 
     if (!focused) setText(String(value));
   }, [value, focused]);
 
+  const bounded = (n: number) => {
+    let v = n;
+    if (min !== undefined) v = Math.max(min, v);
+    if (max !== undefined) v = Math.min(max, v);
+    return v;
+  };
+
   const commit = (raw: string) => {
-    let n = parse(raw);
-    if (!Number.isFinite(n)) n = min ?? 0;
-    if (min !== undefined) n = Math.max(min, n);
-    if (max !== undefined) n = Math.min(max, n);
-    setText(String(n));
-    onChange(n);
+    const n = parse(raw);
+    const v = bounded(Number.isFinite(n) ? n : (min ?? 0));
+    setText(String(v));
+    onChange(v);
   };
 
   return (
@@ -45,11 +50,12 @@ export function NumberField({ label, value, onChange, min, max, disabled, float 
           onFocus={() => setFocused(true)}
           onChange={(e) => {
             const raw = e.target.value;
+            // The text stays exactly as typed until blur; only the committed value is clamped.
             setText(raw);
             if (raw === '' || raw === '-' || raw.endsWith('.')) return;
             const n = parse(raw);
             if (!Number.isFinite(n)) return;
-            onChange(max !== undefined ? Math.min(max, n) : n);
+            onChange(bounded(n));
           }}
           onBlur={(e) => {
             setFocused(false);

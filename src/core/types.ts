@@ -41,6 +41,7 @@ export interface NinePatchConfig {
 export type NinePatchContext = Pick<
   CanvasRenderingContext2D,
   | 'fillStyle'
+  | 'globalCompositeOperation'
   | 'clearRect'
   | 'fillRect'
   | 'beginPath'

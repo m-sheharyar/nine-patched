@@ -19,3 +19,14 @@ export function rgbaStr(hex: string, opacity: number) {
   const { r, g, b } = hexToRgb(hex);
   return `rgba(${r}, ${g}, ${b}, ${clamp(opacity, 0, 100) / 100})`;
 }
+
+const channelHex = (v: number) => clamp(Math.round(v), 0, 255).toString(16).padStart(2, '0');
+
+/** Per-channel linear blend of two hex colors; t = 0 gives `from`, t = 1 gives `to`. */
+export function mixHex(from: string, to: string, t: number): string {
+  const a = hexToRgb(from);
+  const b = hexToRgb(to);
+  const k = clamp(t, 0, 1);
+  const mix = (x: number, y: number) => channelHex(x + (y - x) * k);
+  return `#${mix(a.r, b.r)}${mix(a.g, b.g)}${mix(a.b, b.b)}`;
+}
