@@ -42,6 +42,12 @@ const FILL_TYPE_LABELS: Record<FillType, string> = {
   gradient: 'Linear gradient',
 };
 
+/** The h2 title inside each collapsible `<details>` section of the inspector. */
+export type SectionTitle = 'Geometry' | 'Fill, background & border' | '9-Patch regions';
+
+/** One of the four keyboard-operable Radix sliders in the inspector. */
+export type SliderName = 'Adjust corner radius' | 'Adjust fill opacity' | 'Adjust gradient angle' | 'Adjust border width';
+
 /**
  * Page object for the nine-patched app. Selectors rely on `<label htmlFor>` association
  * (`getByLabel`) wherever the field has one, so they track the visible UI text rather than
@@ -95,8 +101,92 @@ export class AppPage {
     return this.page.getByRole('button', { name: /^Remove stop \d+$/ });
   }
 
+  get resetButton(): Locator {
+    return this.page.getByRole('button', { name: 'Reset', exact: true });
+  }
+
+  get zoomOutButton(): Locator {
+    return this.page.getByRole('button', { name: 'Zoom out' });
+  }
+
+  get zoomInButton(): Locator {
+    return this.page.getByRole('button', { name: 'Zoom in' });
+  }
+
+  /** Also exposes `aria-pressed`, true while zoom follows the stage size. */
+  get fitButton(): Locator {
+    return this.page.getByRole('button', { name: 'Fit', exact: true });
+  }
+
+  get zoomLevelStatus(): Locator {
+    return this.page.getByRole('status', { name: 'Zoom level' });
+  }
+
+  get showGuidesCheckbox(): Locator {
+    return this.page.getByRole('checkbox', { name: 'Show guides' });
+  }
+
+  /** The SVG guide overlay's root; `aria-hidden` and non-interactive, so located by test id. */
+  get guideOverlay(): Locator {
+    return this.page.getByTestId('guide-overlay');
+  }
+
+  get workspace(): Locator {
+    return this.page.getByRole('region', { name: 'Workspace' });
+  }
+
+  get inspector(): Locator {
+    return this.page.getByRole('complementary', { name: 'Inspector' });
+  }
+
+  /** The stage's checkerboard backdrop, for reading theme-dependent computed styles. */
+  get stageBackground(): Locator {
+    return this.workspace.locator('.checkerboard');
+  }
+
+  get validStatus(): Locator {
+    return this.page.getByText('Valid 9-patch', { exact: true });
+  }
+
+  get fileNameField(): Locator {
+    return this.page.getByLabel('File name', { exact: true });
+  }
+
+  shapeRadio(shape: Shape): Locator {
+    return this.radio('Shape', SHAPE_LABELS[shape]);
+  }
+
+  fillTypeRadio(type: FillType): Locator {
+    return this.radio('Fill type', FILL_TYPE_LABELS[type]);
+  }
+
+  slider(name: SliderName): Locator {
+    return this.page.getByRole('slider', { name });
+  }
+
+  /** The clickable `<summary>` that expands/collapses a section, found via its h2 heading. */
+  sectionSummary(title: SectionTitle): Locator {
+    return this.page.getByRole('heading', { name: title, level: 2 }).locator('xpath=ancestor::summary[1]');
+  }
+
+  /** The section's native `<details>` element, whose `open` property reflects expanded state. */
+  sectionDetails(title: SectionTitle): Locator {
+    return this.page.getByRole('heading', { name: title, level: 2 }).locator('xpath=ancestor::details[1]');
+  }
+
   async goto(): Promise<void> {
     await this.page.goto('/');
+  }
+
+  /** Parses the `Zoom level` status text (e.g. `5×`) into a number. */
+  async zoomLevel(): Promise<number> {
+    const text = await this.zoomLevelStatus.textContent();
+    return Number.parseInt(text ?? '', 10);
+  }
+
+  /** The canvas's `width`/`height` attributes — the pixel size of the export, independent of zoom. */
+  async canvasSize(): Promise<{ width: number; height: number }> {
+    return this.canvas.evaluate((c) => ({ width: (c as HTMLCanvasElement).width, height: (c as HTMLCanvasElement).height }));
   }
 
   async downloadNinePatch(): Promise<DownloadedNinePatch> {
