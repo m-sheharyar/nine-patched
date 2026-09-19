@@ -7,17 +7,17 @@ test.describe('default zoom is Fit', () => {
   test.describe(() => {
     test.use({ viewport: { width: 1440, height: 900 } });
 
-    test('the default 82x82 image fits at 4x on a 1440x900 viewport', async ({ page }) => {
+    test('the default 82x82 image fits at 5x on a 1440x900 viewport', async ({ page }) => {
       const app = new AppPage(page);
       await app.goto();
 
       await expect(app.fitButton).toHaveAttribute('aria-pressed', 'true');
-      await expect(app.zoomLevelStatus).toHaveText('4×');
+      await expect(app.zoomLevelStatus).toHaveText('5×');
 
       const size = await app.canvasSize();
       const box = await app.canvas.boundingBox();
-      expect(box?.width).toBe(size.width * 4);
-      expect(box?.height).toBe(size.height * 4);
+      expect(box?.width).toBe(size.width * 5);
+      expect(box?.height).toBe(size.height * 5);
     });
   });
 
@@ -45,17 +45,17 @@ test.describe('zoom controls', () => {
   test('Zoom in / Zoom out step along the ladder and un-press Fit', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
-    expect(await app.zoomLevel()).toBe(4);
-
-    await app.zoomInButton.click();
-    await expect(app.zoomLevelStatus).toHaveText('5×');
-    await expect(app.fitButton).toHaveAttribute('aria-pressed', 'false');
+    expect(await app.zoomLevel()).toBe(5);
 
     await app.zoomInButton.click();
     await expect(app.zoomLevelStatus).toHaveText('6×');
+    await expect(app.fitButton).toHaveAttribute('aria-pressed', 'false');
+
+    await app.zoomInButton.click();
+    await expect(app.zoomLevelStatus).toHaveText('8×');
 
     await app.zoomOutButton.click();
-    await expect(app.zoomLevelStatus).toHaveText('5×');
+    await expect(app.zoomLevelStatus).toHaveText('6×');
   });
 
   test('Zoom in clamps at 32x and disables the button', async ({ page }) => {
@@ -83,14 +83,14 @@ test.describe('zoom controls', () => {
   test('Fit restores the fit level after a manual zoom', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
-    expect(await app.zoomLevel()).toBe(4);
+    expect(await app.zoomLevel()).toBe(5);
 
     await app.zoomInButton.click();
-    await expect(app.zoomLevelStatus).not.toHaveText('4×');
+    await expect(app.zoomLevelStatus).not.toHaveText('5×');
     await expect(app.fitButton).toHaveAttribute('aria-pressed', 'false');
 
     await app.fitButton.click();
-    await expect(app.zoomLevelStatus).toHaveText('4×');
+    await expect(app.zoomLevelStatus).toHaveText('5×');
     await expect(app.fitButton).toHaveAttribute('aria-pressed', 'true');
   });
 

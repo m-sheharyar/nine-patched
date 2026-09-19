@@ -12,7 +12,6 @@ export interface DownloadedNinePatch {
 export type Shape = 'rounded' | 'pill' | 'ellipse' | 'rectangle';
 export type FillType = 'solid' | 'gradient';
 export type RegionKind = 'stretch' | 'content';
-export type PreviewScale = '1x' | '2x' | '4x';
 export interface RegionPatch {
   x?: number;
   y?: number;
@@ -154,30 +153,6 @@ export class AppPage {
     return this.page.getByText('Valid 9-patch', { exact: true });
   }
 
-  get previewPane(): Locator {
-    return this.page.getByRole('region', { name: 'Stretched preview' });
-  }
-
-  get previewCanvas(): Locator {
-    return this.page.getByTestId('stretched-canvas');
-  }
-
-  get sampleText(): Locator {
-    return this.page.getByTestId('sample-text');
-  }
-
-  get previewWidthField(): Locator {
-    return this.page.getByLabel('Preview width', { exact: true });
-  }
-
-  get previewHeightField(): Locator {
-    return this.page.getByLabel('Preview height', { exact: true });
-  }
-
-  get resizeHandle(): Locator {
-    return this.page.getByRole('button', { name: 'Resize stretched preview' });
-  }
-
   get fileNameField(): Locator {
     return this.page.getByLabel('File name', { exact: true });
   }
@@ -236,10 +211,6 @@ export class AppPage {
     return this.page.getByRole('slider', { name });
   }
 
-  previewScaleRadio(scale: PreviewScale): Locator {
-    return this.radio('Preview scale', scale);
-  }
-
   /** The clickable `<summary>` that expands/collapses a section, found via its h2 heading. */
   sectionSummary(title: SectionTitle): Locator {
     return this.page.getByRole('heading', { name: title, level: 2 }).locator('xpath=ancestor::summary[1]');
@@ -263,29 +234,6 @@ export class AppPage {
   /** The canvas's `width`/`height` attributes — the pixel size of the export, independent of zoom. */
   async canvasSize(): Promise<{ width: number; height: number }> {
     return this.canvas.evaluate((c) => ({ width: (c as HTMLCanvasElement).width, height: (c as HTMLCanvasElement).height }));
-  }
-
-  /** Raw RGBA bytes read from a canvas's backing store via `getImageData`. */
-  private async readPixels(canvas: Locator, x: number, y: number, w: number, h: number): Promise<number[]> {
-    return canvas.evaluate((c, args) => {
-      const ctx = (c as HTMLCanvasElement).getContext('2d')!;
-      return Array.from(ctx.getImageData(args.x, args.y, args.w, args.h).data);
-    }, { x, y, w, h });
-  }
-
-  /** One pixel `[r, g, b, a]` from the stretched preview canvas's backing store. */
-  async previewPixel(x: number, y: number): Promise<number[]> {
-    return this.readPixels(this.previewCanvas, x, y, 1, 1);
-  }
-
-  /** A block of raw RGBA bytes from the stretched preview canvas's backing store. */
-  async previewBlock(x: number, y: number, w: number, h: number): Promise<number[]> {
-    return this.readPixels(this.previewCanvas, x, y, w, h);
-  }
-
-  /** A block of raw RGBA bytes from the source canvas, in content coordinates (the 1px frame is added here). */
-  async sourceBlock(x: number, y: number, w: number, h: number): Promise<number[]> {
-    return this.readPixels(this.canvas, x + 1, y + 1, w, h);
   }
 
   async downloadNinePatch(): Promise<DownloadedNinePatch> {
@@ -327,14 +275,6 @@ export class AppPage {
 
   async setCornerRadius(value: number): Promise<void> {
     await this.fillNumberField(this.cornerRadiusField, value);
-  }
-
-  async setPreviewWidth(value: number): Promise<void> {
-    await this.fillNumberField(this.previewWidthField, value);
-  }
-
-  async setPreviewHeight(value: number): Promise<void> {
-    await this.fillNumberField(this.previewHeightField, value);
   }
 
   async setFillType(type: FillType): Promise<void> {

@@ -12,40 +12,27 @@ import {
   resolveNinePatch,
   serializeConfigDocument,
 } from '@/core';
-import type { NinePatchConfig, Size } from '@/core';
+import type { NinePatchConfig } from '@/core';
 import { initialShareState, useConfigUrlSync } from '@/hooks/useConfigUrlSync';
 import { useNinePatchCanvas } from '@/hooks/useNinePatchCanvas';
 import { usePresets } from '@/hooks/usePresets';
-import { useStretchedPreview } from '@/hooks/useStretchedPreview';
 import { useTheme } from '@/hooks/useTheme';
 import { configFileName, MAX_IMPORT_BYTES, readConfigText } from '@/lib/configFile';
 import { downloadBlob } from '@/lib/downloadBlob';
 import { downloadCanvasAsPng } from '@/lib/downloadCanvasAsPng';
-import { resolveTarget } from '@/lib/previewTarget';
 import { sanitizeFileName } from '@/lib/sanitizeFileName';
 import type { SharedConfig } from '@/lib/shareLink';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const previewRef = useRef<HTMLCanvasElement>(null);
   const [config, setConfig] = useState<NinePatchConfig>(() => initialShareState().config);
   const [fileName, setFileName] = useState(() => initialShareState().name);
   const [notice, setNotice] = useState<Notice | null>(() => linkNotice(initialShareState().issues));
   const [showGuides, setShowGuides] = useState(true);
-  // How someone looked at the asset, not part of it: never in the config, never in the share link.
-  const [previewSize, setPreviewSize] = useState<Size | null>(null);
   const { dark, toggleDark } = useTheme();
 
   const resolved = useMemo(() => resolveNinePatch(config), [config]);
-  const target = useMemo(
-    () => resolveTarget(previewSize, { width: resolved.contentWidth, height: resolved.contentHeight }),
-    [previewSize, resolved.contentWidth, resolved.contentHeight],
-  );
-
-  // Order matters: the preview draws from the source canvas, so the source has to be drawn first.
   const uniformity = useNinePatchCanvas(canvasRef, config);
-  useStretchedPreview(canvasRef, previewRef, config, target);
-
   const warnings = useMemo(() => ninePatchWarnings(config, uniformity), [config, uniformity]);
 
   const applyShared = useCallback((shared: SharedConfig) => {
@@ -73,7 +60,6 @@ export default function App() {
     setConfig(DEFAULT_CONFIG);
     setFileName(DEFAULT_FILE_NAME);
     setNotice(null);
-    setPreviewSize(null);
     clearHash();
   };
 
@@ -139,14 +125,11 @@ export default function App() {
       <main className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <Workspace
           canvasRef={canvasRef}
-          previewRef={previewRef}
           resolved={resolved}
           stretchEnabled={config.stretchEnabled}
           contentEnabled={config.contentEnabled}
           showGuides={showGuides}
           onShowGuidesChange={setShowGuides}
-          target={target}
-          onTargetChange={setPreviewSize}
           warnings={warnings}
         />
         <Inspector
