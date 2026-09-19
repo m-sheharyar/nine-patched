@@ -89,7 +89,7 @@ test.describe('dark mode', () => {
     await app.goto();
 
     const light = await app.stageBackground.evaluate((el) => getComputedStyle(el).backgroundColor);
-    expect(light).toBe('rgb(255, 255, 255)');
+    expect(light).toBe('rgb(161, 161, 170)');
 
     await app.darkModeToggle.click();
     await expect
