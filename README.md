@@ -4,8 +4,6 @@
 
 nine-patched creates valid `.9.png` assets without an image editor. Pick a shape, set the fill, border and regions, and download a correctly framed 9-patch PNG. It is built for Roku SceneGraph first (focus rings, buttons, `Poster` backgrounds). The format is shared with Android, so the same files work there.
 
-**Live app:** https://sherrylio.github.io/nine-patched/
-
 ![nine-patched editing a ghost button 9-patch, with stretch and content guides over the artwork](docs/screenshot.png)
 
 ## What is a 9-patch image?
