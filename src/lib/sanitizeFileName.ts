@@ -1,4 +1,5 @@
 /** Characters no mainstream filesystem accepts in a name, plus the C0/DEL control range. */
+// eslint-disable-next-line no-control-regex -- stripping control characters is the point
 const ILLEGAL = /[/\\:*?"<>|\x00-\x1f\x7f]+/g;
 
 /**
