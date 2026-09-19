@@ -23,6 +23,8 @@ interface GeometrySectionProps {
 
 export function GeometrySection({ config, radius, maxRadius, onChange, onDimensionChange }: GeometrySectionProps) {
   const rounded = config.shape === 'rounded';
+  // A pill's radius is half its short side, so at a square size it draws the same circle as an ellipse.
+  const pillIsCircle = config.shape === 'pill' && config.contentWidth === config.contentHeight;
   return (
     <Section title="Geometry">
       <SegmentedControl label="Shape" value={config.shape} options={SHAPES} onChange={(shape) => onChange({ shape })} />
@@ -42,6 +44,11 @@ export function GeometrySection({ config, radius, maxRadius, onChange, onDimensi
           onChange={(v) => onDimensionChange('contentHeight', v)}
         />
       </div>
+      {pillIsCircle && (
+        <p className="text-[11px] leading-4 text-zinc-500 dark:text-zinc-400">
+          At equal width and height a pill is a circle. Change the width or height to see the pill.
+        </p>
+      )}
       <SliderField
         label={`Corner radius (px)${rounded ? '' : ' — auto for this shape'}`}
         sliderLabel="Adjust corner radius"

@@ -93,7 +93,8 @@ describe('renderNinePatch', () => {
     expect(events[0]).toEqual({
       kind: 'call',
       name: 'clearRect',
-      args: [0, 0, 82, 82],
+      // Default content 64x32 plus a 1px frame on each side.
+      args: [0, 0, 66, 34],
       fillStyle: '#000000',
       composite: 'source-over',
     });
@@ -103,12 +104,14 @@ describe('renderNinePatch', () => {
     const { ctx, events } = createRecordingContext();
     renderNinePatch(ctx, DEFAULT_CONFIG);
 
+    // Auto stretch/content region for the default (64x32, radius 8) is { x: 8, y: 8, w: 48, h: 16 },
+    // offset by the 1px frame; image is 66x34 so the bottom/right edges sit at 33/65.
     const markers = fillRectCalls(events).map((e) => e.args);
     expect(markers).toEqual([
-      [13, 0, 56, 1], // top
-      [0, 13, 1, 56], // left
-      [13, 81, 56, 1], // bottom
-      [81, 13, 1, 56], // right
+      [9, 0, 48, 1], // top
+      [0, 9, 1, 16], // left
+      [9, 33, 48, 1], // bottom
+      [65, 9, 1, 16], // right
     ]);
     for (const e of fillRectCalls(events)) {
       expect(e.fillStyle).toBe('#000000');
@@ -124,7 +127,8 @@ describe('renderNinePatch', () => {
 
   it('draws only the stretch markers when content is disabled', () => {
     const { ctx, events } = createRecordingContext();
-    renderNinePatch(ctx, cfg({ contentEnabled: false }));
+    // Explicit geometry (not the default): a square canvas keeps the marker run a round number.
+    renderNinePatch(ctx, cfg({ contentWidth: 80, contentHeight: 80, cornerRadius: 12, contentEnabled: false }));
     const markers = fillRectCalls(events).map((e) => e.args);
     expect(markers).toEqual([
       [13, 0, 56, 1],
@@ -142,7 +146,15 @@ describe('renderNinePatch', () => {
     const { ctx, events } = createRecordingContext();
     renderNinePatch(
       ctx,
-      cfg({ stretchEnabled: false, contentEnabled: false, bgTransparent: false, backgroundColor: '#123456' }),
+      // Explicit content size (not the default): keeps the expected rect a round number.
+      cfg({
+        contentWidth: 80,
+        contentHeight: 80,
+        stretchEnabled: false,
+        contentEnabled: false,
+        bgTransparent: false,
+        backgroundColor: '#123456',
+      }),
     );
     const calls = fillRectCalls(events);
     expect(calls).toHaveLength(1);
@@ -207,7 +219,18 @@ describe('renderNinePatch', () => {
       { color: '#2e7d32', position: 100, opacity: 100 },
       { color: '#4caf50', position: 0, opacity: 100 },
     ];
-    renderNinePatch(ctx, cfg({ fillType: 'gradient', gradientStops: stops, gradientAngle: 180, borderWidth: 0 }));
+    // Explicit content size (not the default): keeps the expected gradient coordinates round numbers.
+    renderNinePatch(
+      ctx,
+      cfg({
+        contentWidth: 80,
+        contentHeight: 80,
+        fillType: 'gradient',
+        gradientStops: stops,
+        gradientAngle: 180,
+        borderWidth: 0,
+      }),
+    );
 
     expect(gradients).toHaveLength(1);
     const [x0, y0, x1, y1] = gradients[0].args;

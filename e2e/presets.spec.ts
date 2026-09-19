@@ -232,8 +232,9 @@ test('clicking the active preset again raises no notice', async ({ page }) => {
 
 // Row 11: applying a preset reaches the URL through the existing (debounced) sync.
 test('applying Focus ring is reflected in the URL', async ({ page }) => {
-  // The URL carries only fields that differ from the defaults, and the preset's radius of 12 is the default.
-  const { cornerRadius: _sameAsDefault, ...expected } = PRESETS.find((p) => p.label === 'Focus ring')!.patch;
+  // The URL carries only fields that differ from the defaults; every one of Focus ring's patched
+  // fields (including its radius of 12) now differs from the defaults, so the whole patch appears.
+  const expected = PRESETS.find((p) => p.label === 'Focus ring')!.patch;
   const app = new AppPage(page);
   await app.goto();
   await app.presetButton('Focus ring').click();

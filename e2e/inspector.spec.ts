@@ -10,17 +10,18 @@ test.describe('slider / number field sync', () => {
   }) => {
     const app = new AppPage(page);
     await app.goto();
+    await app.setSize(80, 80); // not the default: keeps the max radius (40) large enough for End below
 
     const slider = app.slider('Adjust corner radius');
     const field = app.cornerRadiusField;
 
-    await expect(slider).toHaveAttribute('aria-valuenow', '12');
-    await expect(field).toHaveValue('12');
+    await expect(slider).toHaveAttribute('aria-valuenow', '8');
+    await expect(field).toHaveValue('8');
 
     await slider.focus();
     await slider.press('ArrowRight');
-    await expect(slider).toHaveAttribute('aria-valuenow', '13');
-    await expect(field).toHaveValue('13');
+    await expect(slider).toHaveAttribute('aria-valuenow', '9');
+    await expect(field).toHaveValue('9');
 
     await slider.press('End');
     await expect(slider).toHaveAttribute('aria-valuenow', '40');
@@ -38,6 +39,7 @@ test.describe('slider / number field sync', () => {
   test('typing into the corner radius field moves the slider', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
+    await app.setSize(80, 80); // not the default: room for a corner radius of 25
 
     await app.setCornerRadius(25);
     await expect(app.slider('Adjust corner radius')).toHaveAttribute('aria-valuenow', '25');
@@ -48,6 +50,7 @@ test.describe('slider / number field sync', () => {
   }) => {
     const app = new AppPage(page);
     await app.goto();
+    await app.setSize(80, 80); // not the default: room for a corner radius of 25 before it shrinks below
 
     const slider = app.slider('Adjust corner radius');
     await app.setCornerRadius(25);
@@ -175,6 +178,7 @@ test.describe('collapsible sections', () => {
   test('a summary toggles its section, and field values survive a collapse/expand cycle', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
+    await app.setSize(80, 80); // not the default: room for a corner radius of 30
     await app.setCornerRadius(30);
 
     const details = app.sectionDetails('Geometry');
@@ -228,16 +232,18 @@ test.describe('Reset', () => {
 
     const { suggestedFilename, png } = await app.downloadNinePatch();
     expect(suggestedFilename).toBe('nine_patch.9.png');
-    expect(png.width).toBe(82);
-    expect(png.height).toBe(82);
+    // Default content 64x32 plus a 1px frame on each side.
+    expect(png.width).toBe(66);
+    expect(png.height).toBe(34);
 
-    const expectedRun = [{ start: 13, end: 68 }];
+    // Auto stretch/content region for the default (64x32, radius 8) is { x: 8, y: 8, w: 48, h: 16 },
+    // offset by the 1px frame.
     const markers = readMarkers(png);
-    expect(markers.top).toEqual(expectedRun);
-    expect(markers.left).toEqual(expectedRun);
-    expect(markers.bottom).toEqual(expectedRun);
-    expect(markers.right).toEqual(expectedRun);
-    expect(getPixel(png, 41, 41)).toEqual({ r: 0x4c, g: 0xaf, b: 0x50, a: 255 });
+    expect(markers.top).toEqual([{ start: 9, end: 56 }]);
+    expect(markers.bottom).toEqual([{ start: 9, end: 56 }]);
+    expect(markers.left).toEqual([{ start: 9, end: 24 }]);
+    expect(markers.right).toEqual([{ start: 9, end: 24 }]);
+    expect(getPixel(png, 33, 17)).toEqual({ r: 0x4c, g: 0xaf, b: 0x50, a: 255 });
   });
 
   test('does not change the zoom level or the Show guides state', async ({ page }) => {

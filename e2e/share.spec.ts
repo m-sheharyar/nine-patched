@@ -49,14 +49,15 @@ test.describe('opening a share link', () => {
     page,
   }) => {
     const app = new AppPage(page);
-    const c = encodeConfigPatch({ shape: 'triangle', contentWidth: 999999, cornerRadius: 22 });
+    // cornerRadius 12 stays under the resulting max (floor(min(64, 32) / 2) = 16 once contentWidth resets).
+    const c = encodeConfigPatch({ shape: 'triangle', contentWidth: 999999, cornerRadius: 12 });
     await page.goto(`/#c=${c}`);
 
     const text = (await app.notice.textContent()) ?? '';
     expect(text.startsWith('Some settings in this link were invalid and were reset to their defaults:')).toBe(true);
     expect(text).toContain('shape');
     expect(text).toContain('contentWidth');
-    await expect(app.cornerRadiusField).toHaveValue('22');
+    await expect(app.cornerRadiusField).toHaveValue('12');
 
     await app.dismissNoticeButton.click();
     await expect(app.notice).not.toBeVisible();
@@ -90,8 +91,9 @@ test.describe('url sync while editing', () => {
     await app.goto();
     const historyBefore = await page.evaluate(() => history.length);
 
-    await app.setCornerRadius(25);
-    await expect.poll(() => decodeConfigFromUrl(page.url()), { timeout: 1500 }).toMatchObject({ cornerRadius: 25 });
+    // Stays under the default canvas's max radius (floor(min(64, 32) / 2) = 16).
+    await app.setCornerRadius(12);
+    await expect.poll(() => decodeConfigFromUrl(page.url()), { timeout: 1500 }).toMatchObject({ cornerRadius: 12 });
 
     const historyAfter = await page.evaluate(() => history.length);
     expect(historyAfter).toBe(historyBefore);
@@ -121,12 +123,13 @@ test.describe('copy share link', () => {
     await app.goto();
     const base = new URL(page.url());
 
-    await app.setCornerRadius(37);
+    // Stays under the default canvas's max radius (floor(min(64, 32) / 2) = 16).
+    await app.setCornerRadius(15);
     await app.copyShareLinkButton.click();
 
     await expect(app.notice).toContainText('Link copied');
     const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
-    const expected = `${base.origin}${base.pathname}${base.search}#c=${encodeConfigPatch({ cornerRadius: 37 })}`;
+    const expected = `${base.origin}${base.pathname}${base.search}#c=${encodeConfigPatch({ cornerRadius: 15 })}`;
     expect(clipboardText).toBe(expected);
   });
 
@@ -148,7 +151,8 @@ test.describe('export', () => {
     const app = new AppPage(page);
     await app.goto();
     await app.setFileName('my_share');
-    await app.setCornerRadius(29);
+    // Stays under the default canvas's max radius (floor(min(64, 32) / 2) = 16).
+    await app.setCornerRadius(15);
 
     const { json, suggestedFilename } = await app.downloadConfig();
 
@@ -157,7 +161,7 @@ test.describe('export', () => {
     const doc = json as { version: number; name: string; config: { cornerRadius: number } };
     expect(doc.version).toBe(1);
     expect(doc.name).toBe('my_share');
-    expect(doc.config.cornerRadius).toBe(29);
+    expect(doc.config.cornerRadius).toBe(15);
   });
 
   test('the name inside the exported document is sanitised like the file name', async ({ page }) => {
@@ -238,8 +242,10 @@ test.describe('import errors', () => {
     const file = {
       name: 'partial.9patch.json',
       mimeType: 'application/json',
+      // cornerRadius 12 stays under the resulting max (floor(min(64, 32) / 2) = 16, the shape being
+      // invalid leaves contentWidth/Height at their defaults).
       buffer: Buffer.from(
-        JSON.stringify({ version: 1, name: 'from_file', config: { shape: 'triangle', cornerRadius: 25 } }),
+        JSON.stringify({ version: 1, name: 'from_file', config: { shape: 'triangle', cornerRadius: 12 } }),
       ),
     };
 
@@ -247,12 +253,12 @@ test.describe('import errors', () => {
     await expect(app.notice).toContainText(
       /^Some settings in this file were invalid and were reset to their defaults:.*shape/,
     );
-    await expect(app.cornerRadiusField).toHaveValue('25');
+    await expect(app.cornerRadiusField).toHaveValue('12');
     // The input is emptied after every pick, otherwise a browser would not fire change for the same file.
     await expect(app.importConfigFileInput).toHaveValue('');
 
     await app.importConfigFileInput.setInputFiles(file);
-    await expect(app.cornerRadiusField).toHaveValue('25');
+    await expect(app.cornerRadiusField).toHaveValue('12');
   });
 });
 

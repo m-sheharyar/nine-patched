@@ -1,5 +1,5 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react';
-import { fitScale, nextZoom } from '@/lib/zoom';
+import { fitScale, nextZoom, SMALL_SCREEN_ZOOM } from '@/lib/zoom';
 
 export interface Zoom {
   stageRef: React.RefObject<HTMLDivElement>;
@@ -13,13 +13,17 @@ export interface Zoom {
 }
 
 /**
- * Integer zoom for the stage. It tracks the stage size until the user picks a level, so resizing
- * the window keeps the artwork framed without ever landing on a fractional scale.
+ * Integer zoom for the stage. It opens in Fit mode on a desktop layout and at SMALL_SCREEN_ZOOM
+ * below it. In Fit mode it tracks the stage size, so resizing the window keeps the artwork framed
+ * without ever landing on a fractional scale.
  */
 export function useZoom(imageWidth: number, imageHeight: number): Zoom {
   const stageRef = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState({ width: 0, height: 0 });
-  const [chosen, setChosen] = useState<number | null>(null);
+  // Same breakpoint as the `lg` side by side layout. Only the opening level depends on it.
+  const [chosen, setChosen] = useState<number | null>(() =>
+    window.matchMedia('(min-width: 1024px)').matches ? null : SMALL_SCREEN_ZOOM,
+  );
 
   useLayoutEffect(() => {
     const element = stageRef.current;

@@ -8,6 +8,7 @@ test.describe('solid fill', () => {
   test('centre pixel matches the exact fill colour at full opacity', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
+    await app.setSize(80, 80); // not the default: keeps (41, 41) at the exact centre
     await app.setFillColor('#3366cc');
     await app.setFillOpacity(100);
 
@@ -18,6 +19,7 @@ test.describe('solid fill', () => {
   test('50% opacity halves the alpha channel and keeps the colour close to exact', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
+    await app.setSize(80, 80); // not the default: keeps (41, 41) at the exact centre
     await app.setFillColor('#3366cc');
     await app.setFillOpacity(50);
 
@@ -150,6 +152,7 @@ test.describe('gradient', () => {
   test.beforeEach(async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
+    await app.setSize(80, 80); // not the default: the pixel probes below assume an 80x80 canvas
     await app.setFillType('gradient');
     await app.setGradientStop(0, { color: '#ff0000', position: 0, opacity: 100 });
     await app.setGradientStop(1, { color: '#0000ff', position: 100, opacity: 100 });
