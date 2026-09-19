@@ -24,6 +24,14 @@ describe('autoStretchRegion', () => {
     expect(autoStretchRegion('rounded', 80, 80, 12)).toEqual({ x: 12, y: 12, w: 56, h: 56 });
   });
 
+  it('rounded: a fractional radius is rounded up, so the markers sit on whole pixels of the flat edge', () => {
+    expect(autoStretchRegion('rounded', 40, 41, 13.44)).toEqual({ x: 14, y: 14, w: 12, h: 13 });
+  });
+
+  it('rounded: a fractional radius that rounds up past the flat span falls back to the centre strip', () => {
+    expect(autoStretchRegion('rounded', 20, 40, 9.5)).toEqual({ x: 9, y: 10, w: 2, h: 20 });
+  });
+
   it('rectangle: the auto region is the full box (no radius to inset by)', () => {
     expect(autoStretchRegion('rectangle', 100, 50, 10)).toEqual({ x: 0, y: 0, w: 100, h: 50 });
   });
@@ -74,6 +82,10 @@ describe('autoStretchRegion', () => {
 describe('autoContentRegion', () => {
   it('rounded: insets by the corner radius on every side', () => {
     expect(autoContentRegion('rounded', 80, 80, 12)).toEqual({ x: 12, y: 12, w: 56, h: 56 });
+  });
+
+  it('rounded: a fractional radius is rounded up, so the content box stays inside the shape', () => {
+    expect(autoContentRegion('rounded', 40, 41, 13.44)).toEqual({ x: 14, y: 14, w: 12, h: 13 });
   });
 
   it('rectangle: the full box', () => {
