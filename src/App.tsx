@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Inspector } from '@/components/Inspector';
-import { fileNotice, linkNotice, NoticeBar } from '@/components/NoticeBar';
-import type { Notice } from '@/components/NoticeBar';
+import { NoticeBar } from '@/components/NoticeBar';
 import { TopBar } from '@/components/TopBar';
 import { Workspace } from '@/components/Workspace';
 import {
@@ -20,6 +19,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { configFileName, MAX_IMPORT_BYTES, readConfigText } from '@/lib/configFile';
 import { downloadBlob } from '@/lib/downloadBlob';
 import { downloadCanvasAsPng } from '@/lib/downloadCanvasAsPng';
+import { fileNotice, linkNotice } from '@/lib/notices';
+import type { Notice } from '@/lib/notices';
 import { sanitizeFileName } from '@/lib/sanitizeFileName';
 import type { SharedConfig } from '@/lib/shareLink';
 

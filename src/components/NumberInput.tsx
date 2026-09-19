@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { inputCls } from './styles';
 
 export interface NumberInputProps {
@@ -14,7 +14,8 @@ export interface NumberInputProps {
 
 /**
  * A number entry that never rewrites what is being typed: the text is left alone until blur, while
- * every value handed to `onChange` is already clamped to [min, max].
+ * every value handed to `onChange` is already clamped to [min, max]. The draft text only exists
+ * while the field has focus, otherwise the field shows the value it was given.
  */
 export function NumberInput({
   id,
@@ -26,13 +27,8 @@ export function NumberInput({
   float,
   className = 'w-full',
 }: NumberInputProps) {
-  const [text, setText] = useState(String(value));
-  const [focused, setFocused] = useState(false);
+  const [draft, setDraft] = useState<string | null>(null);
   const parse = (s: string) => (float ? parseFloat(s) : parseInt(s, 10));
-
-  useEffect(() => {
-    if (!focused) setText(String(value));
-  }, [value, focused]);
 
   const bounded = (n: number) => {
     let v = n;
@@ -43,9 +39,7 @@ export function NumberInput({
 
   const commit = (raw: string) => {
     const n = parse(raw);
-    const v = bounded(Number.isFinite(n) ? n : (min ?? 0));
-    setText(String(v));
-    onChange(v);
+    onChange(bounded(Number.isFinite(n) ? n : (min ?? 0)));
   };
 
   return (
@@ -54,21 +48,21 @@ export function NumberInput({
       type="number"
       inputMode={float ? 'decimal' : 'numeric'}
       step={float ? 'any' : 1}
-      value={text}
+      value={draft ?? String(value)}
       min={min}
       max={max}
       disabled={disabled}
-      onFocus={() => setFocused(true)}
+      onFocus={() => setDraft(String(value))}
       onChange={(e) => {
         const raw = e.target.value;
-        setText(raw);
+        setDraft(raw);
         if (raw === '' || raw === '-' || raw.endsWith('.')) return;
         const n = parse(raw);
         if (!Number.isFinite(n)) return;
         onChange(bounded(n));
       }}
       onBlur={(e) => {
-        setFocused(false);
+        setDraft(null);
         commit(e.target.value);
       }}
       className={`${inputCls} disabled:bg-zinc-100 disabled:text-zinc-400 dark:disabled:bg-zinc-900 dark:disabled:text-zinc-600 ${className}`}

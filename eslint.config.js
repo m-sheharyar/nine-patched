@@ -31,11 +31,6 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      // Three existing spots (two controlled inputs that mirror a prop into local text, one
-      // "latest value" ref) trip these newer rules. Rewriting them changes input timing, so they
-      // stay visible as warnings until that is done with its own tests.
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/refs': 'warn',
     },
   },
   {

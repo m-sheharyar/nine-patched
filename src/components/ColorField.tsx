@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { normalizeHex } from '@/core';
 import { Field } from './Field';
 import { focusRing, inputCls } from './styles';
@@ -10,12 +10,10 @@ interface ColorFieldProps {
 }
 
 export function ColorField({ label, value, onChange }: ColorFieldProps) {
-  const [text, setText] = useState(value);
-  const [focused, setFocused] = useState(false);
-
-  useEffect(() => {
-    if (!focused) setText(value);
-  }, [value, focused]);
+  // The typed text only exists while the text field has focus, otherwise the field shows the value.
+  const [draft, setDraft] = useState<string | null>(null);
+  const focused = draft !== null;
+  const text = draft ?? value;
 
   const norm = normalizeHex(text);
   const swatch = norm ?? value;
@@ -30,10 +28,7 @@ export function ColorField({ label, value, onChange }: ColorFieldProps) {
               type="color"
               aria-label={`${label} picker`}
               value={swatch}
-              onChange={(e) => {
-                setText(e.target.value);
-                onChange(e.target.value);
-              }}
+              onChange={(e) => onChange(e.target.value)}
               className={`h-7 w-7 shrink-0 cursor-pointer rounded border border-zinc-300 dark:border-zinc-700 ${focusRing}`}
             />
             <input
@@ -41,22 +36,17 @@ export function ColorField({ label, value, onChange }: ColorFieldProps) {
               type="text"
               spellCheck={false}
               value={text}
-              onFocus={() => setFocused(true)}
+              onFocus={() => setDraft(value)}
               onChange={(e) => {
                 const raw = e.target.value;
-                setText(raw);
+                setDraft(raw);
                 const n = normalizeHex(raw);
                 if (n) onChange(n);
               }}
               onBlur={() => {
-                setFocused(false);
+                setDraft(null);
                 const n = normalizeHex(text);
-                if (n) {
-                  setText(n);
-                  onChange(n);
-                } else {
-                  setText(value);
-                }
+                if (n) onChange(n);
               }}
               className={`${inputCls} w-full ${invalid ? 'border-amber-600 dark:border-amber-400' : ''}`}
               placeholder="#000000"

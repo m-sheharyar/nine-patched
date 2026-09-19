@@ -42,7 +42,9 @@ export interface ConfigUrlSync {
 export function useConfigUrlSync({ config, fileName, onExternalChange }: UrlSyncOptions): ConfigUrlSync {
   const hash = useMemo(() => buildShareHash(config, fileName), [config, fileName]);
   const hashRef = useRef(hash);
-  hashRef.current = hash;
+  useEffect(() => {
+    hashRef.current = hash;
+  }, [hash]);
 
   useEffect(() => {
     const timer = setTimeout(() => {

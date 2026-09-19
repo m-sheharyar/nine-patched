@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import type { Notice } from '@/components/NoticeBar';
+import type { Notice } from '@/lib/notices';
 import { findActivePreset, presetConfig } from '@/core';
 import type { NinePatchConfig, Preset } from '@/core';
 import { nameAfterPreset } from '@/lib/presetName';
