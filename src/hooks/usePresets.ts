@@ -32,7 +32,13 @@ export interface PresetsController {
  * own offer, and it drops the notice only if it is still the one the apply put up (a `setNotice`
  * functional update, so it never stomps a notice a later change already replaced).
  */
-export function usePresets({ config, fileName, setConfig, setFileName, setNotice }: UsePresetsOptions): PresetsController {
+export function usePresets({
+  config,
+  fileName,
+  setConfig,
+  setFileName,
+  setNotice,
+}: UsePresetsOptions): PresetsController {
   const activePreset = useMemo(() => findActivePreset(config), [config]);
 
   const appliedRef = useRef<Snapshot | null>(null);

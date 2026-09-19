@@ -16,7 +16,12 @@ export function GuideOverlay({ geometry }: { geometry: GuideGeometry }) {
 
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden="true" data-testid="guide-overlay">
-      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="absolute inset-0 overflow-visible">
+      <svg
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        className="absolute inset-0 overflow-visible"
+      >
         {stretchColumn && (
           <g stroke={STRETCH} strokeWidth={GUIDE_STROKE}>
             <line x1={stretchColumn.before} y1={0} x2={stretchColumn.before} y2={height} />
@@ -29,9 +34,7 @@ export function GuideOverlay({ geometry }: { geometry: GuideGeometry }) {
             <line x1={0} y1={stretchRow.after} x2={width} y2={stretchRow.after} />
           </g>
         )}
-        {content && (
-          <rect {...content} fill="none" stroke={CONTENT} strokeWidth={GUIDE_STROKE} strokeDasharray="5 4" />
-        )}
+        {content && <rect {...content} fill="none" stroke={CONTENT} strokeWidth={GUIDE_STROKE} strokeDasharray="5 4" />}
       </svg>
 
       {(stretchColumn || stretchRow) && (

@@ -14,7 +14,10 @@ export default tseslint.config(
   {
     rules: {
       // `const { omitted: _omitted, ...rest } = obj` is how a field is dropped on purpose.
-      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true, varsIgnorePattern: '^_', argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { ignoreRestSiblings: true, varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
+      ],
     },
   },
   {

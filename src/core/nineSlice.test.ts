@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { drawNineSlice, nineSliceRects, stretchedContentBox, type NineSliceContext, type SliceRect, type Size } from './nineSlice';
+import {
+  drawNineSlice,
+  nineSliceRects,
+  stretchedContentBox,
+  type NineSliceContext,
+  type SliceRect,
+  type Size,
+} from './nineSlice';
 import type { Region } from './types';
 
 const SRC: Size = { width: 10, height: 8 };
@@ -38,7 +45,13 @@ it('row 1: splits a 10 by 8 source onto a 30 by 20 target as nine rects, rows fi
 });
 
 describe('row 2: destination rects tile the target with no gap and no overlap', () => {
-  it.each<[number, number]>([[10, 8], [30, 20], [6, 6], [12, 9], [100, 64]])('target %i by %i', (w, h) => {
+  it.each<[number, number]>([
+    [10, 8],
+    [30, 20],
+    [6, 6],
+    [12, 9],
+    [100, 64],
+  ])('target %i by %i', (w, h) => {
     expect(tiles(nineSliceRects(SRC, RUN, size(w, h)), size(w, h))).toEqual(EXACT);
   });
 });
@@ -52,17 +65,29 @@ it('row 3: fixed parts are never scaled', () => {
 
 describe('row 4: an axis without a run scales as a whole', () => {
   it.each<[string, Region | null, SliceRect[]]>([
-    ['null stretch is one rect, source onto target', null, [{ sx: 0, sy: 0, sw: 10, sh: 8, dx: 0, dy: 0, dw: 30, dh: 20 }]],
-    ['w 0 is three rects in one column', { x: 2, y: 3, w: 0, h: 2 }, [
-      { sx: 0, sy: 0, sw: 10, sh: 3, dx: 0, dy: 0, dw: 30, dh: 3 },
-      { sx: 0, sy: 3, sw: 10, sh: 2, dx: 0, dy: 3, dw: 30, dh: 14 },
-      { sx: 0, sy: 5, sw: 10, sh: 3, dx: 0, dy: 17, dw: 30, dh: 3 },
-    ]],
-    ['h 0 is three rects in one row', { x: 2, y: 3, w: 4, h: 0 }, [
-      { sx: 0, sy: 0, sw: 2, sh: 8, dx: 0, dy: 0, dw: 2, dh: 20 },
-      { sx: 2, sy: 0, sw: 4, sh: 8, dx: 2, dy: 0, dw: 24, dh: 20 },
-      { sx: 6, sy: 0, sw: 4, sh: 8, dx: 26, dy: 0, dw: 4, dh: 20 },
-    ]],
+    [
+      'null stretch is one rect, source onto target',
+      null,
+      [{ sx: 0, sy: 0, sw: 10, sh: 8, dx: 0, dy: 0, dw: 30, dh: 20 }],
+    ],
+    [
+      'w 0 is three rects in one column',
+      { x: 2, y: 3, w: 0, h: 2 },
+      [
+        { sx: 0, sy: 0, sw: 10, sh: 3, dx: 0, dy: 0, dw: 30, dh: 3 },
+        { sx: 0, sy: 3, sw: 10, sh: 2, dx: 0, dy: 3, dw: 30, dh: 14 },
+        { sx: 0, sy: 5, sw: 10, sh: 3, dx: 0, dy: 17, dw: 30, dh: 3 },
+      ],
+    ],
+    [
+      'h 0 is three rects in one row',
+      { x: 2, y: 3, w: 4, h: 0 },
+      [
+        { sx: 0, sy: 0, sw: 2, sh: 8, dx: 0, dy: 0, dw: 2, dh: 20 },
+        { sx: 2, sy: 0, sw: 4, sh: 8, dx: 2, dy: 0, dw: 24, dh: 20 },
+        { sx: 6, sy: 0, sw: 4, sh: 8, dx: 26, dy: 0, dw: 4, dh: 20 },
+      ],
+    ],
   ])('%s', (_name, stretch, expected) => {
     expect(nineSliceRects(SRC, stretch, size(30, 20))).toEqual(expected);
   });
@@ -150,8 +175,22 @@ describe('row 12: drawNineSlice offsets the source by the frame and draws smooth
   };
 
   it.each<[string, number | undefined, number[][]]>([
-    ['the default frame adds 1 to sx and sy only', undefined, [[1, 1, 2, 3, 0, 0, 2, 3], [7, 6, 4, 3, 26, 17, 4, 3]]],
-    ['frame 0 adds nothing', 0, [[0, 0, 2, 3, 0, 0, 2, 3], [6, 5, 4, 3, 26, 17, 4, 3]]],
+    [
+      'the default frame adds 1 to sx and sy only',
+      undefined,
+      [
+        [1, 1, 2, 3, 0, 0, 2, 3],
+        [7, 6, 4, 3, 26, 17, 4, 3],
+      ],
+    ],
+    [
+      'frame 0 adds nothing',
+      0,
+      [
+        [0, 0, 2, 3, 0, 0, 2, 3],
+        [6, 5, 4, 3, 26, 17, 4, 3],
+      ],
+    ],
   ])('%s', (_name, frame, expected) => {
     const { ctx, calls } = recorder();
     if (frame === undefined) drawNineSlice(ctx, 'image', RECTS);

@@ -170,11 +170,14 @@ describe('parseConfig', () => {
       ['a Symbol', Symbol('x')],
       ['a Date instance', new Date()],
       ['a Map', new Map()],
-      ['a self-referencing object', (() => {
-        const o: Record<string, unknown> = {};
-        o.self = o;
-        return o;
-      })()],
+      [
+        'a self-referencing object',
+        (() => {
+          const o: Record<string, unknown> = {};
+          o.self = o;
+          return o;
+        })(),
+      ],
       ['a deeply nested garbage object', { a: { b: { c: { d: [1, 2, [3, { e: null }]] } } } }],
     ])('never throws for %s', (_name, input) => {
       expect(() => parseConfig(input)).not.toThrow();
@@ -215,7 +218,9 @@ describe('parseConfig', () => {
     });
 
     it('drops a "constructor" key without polluting any prototype', () => {
-      const malicious = JSON.parse('{"constructor":{"prototype":{"pollutedViaConstructor":true}},"shape":"ellipse"}') as unknown;
+      const malicious = JSON.parse(
+        '{"constructor":{"prototype":{"pollutedViaConstructor":true}},"shape":"ellipse"}',
+      ) as unknown;
       const result = parseConfig(malicious);
       expect(result.config.shape).toBe('ellipse');
       expect(result.issues).toEqual([]);
@@ -498,24 +503,30 @@ describe('parseConfig', () => {
       expect(result.issues).toEqual([]);
     });
 
-    it.each(['x', 'y', 'w', 'h'] as const)('accepts member %s at both boundaries (0 and MAX_CONTENT_SIZE)', (member) => {
-      const low: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: 0 };
-      const high: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: MAX_CONTENT_SIZE };
-      expect(parseConfig({ [field]: low }).issues).toEqual([]);
-      const highResult = parseConfig({ [field]: high });
-      expect(highResult.issues).toEqual([]);
-      expect((highResult.config[field] as Region)[member]).toBe(MAX_CONTENT_SIZE);
-    });
+    it.each(['x', 'y', 'w', 'h'] as const)(
+      'accepts member %s at both boundaries (0 and MAX_CONTENT_SIZE)',
+      (member) => {
+        const low: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: 0 };
+        const high: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: MAX_CONTENT_SIZE };
+        expect(parseConfig({ [field]: low }).issues).toEqual([]);
+        const highResult = parseConfig({ [field]: high });
+        expect(highResult.issues).toEqual([]);
+        expect((highResult.config[field] as Region)[member]).toBe(MAX_CONTENT_SIZE);
+      },
+    );
 
-    it.each(['x', 'y', 'w', 'h'] as const)('falls back the whole region when member %s is just out of range', (member) => {
-      const tooLow: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: -1 };
-      const tooHigh: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: MAX_CONTENT_SIZE + 1 };
-      for (const bad of [tooLow, tooHigh]) {
-        const result = parseConfig({ [field]: bad });
-        expect(result.config[field]).toEqual(DEFAULT_CONFIG[field]);
-        expectSingleIssueFor(result.issues, field);
-      }
-    });
+    it.each(['x', 'y', 'w', 'h'] as const)(
+      'falls back the whole region when member %s is just out of range',
+      (member) => {
+        const tooLow: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: -1 };
+        const tooHigh: Record<string, unknown> = { x: 0, y: 0, w: 0, h: 0, [member]: MAX_CONTENT_SIZE + 1 };
+        for (const bad of [tooLow, tooHigh]) {
+          const result = parseConfig({ [field]: bad });
+          expect(result.config[field]).toEqual(DEFAULT_CONFIG[field]);
+          expectSingleIssueFor(result.issues, field);
+        }
+      },
+    );
 
     it.each<[string, unknown]>([
       ['a non-integer member', { x: 1.5, y: 0, w: 0, h: 0 }],
@@ -591,7 +602,9 @@ describe('parseConfig', () => {
     });
 
     it('falls back the whole list when a bad stop sits inside the first 12 of an over-long list', () => {
-      const stops: unknown[] = Array.from({ length: MAX_GRADIENT_STOPS + 1 }, (_, i) => stopAt((i * 100) / MAX_GRADIENT_STOPS));
+      const stops: unknown[] = Array.from({ length: MAX_GRADIENT_STOPS + 1 }, (_, i) =>
+        stopAt((i * 100) / MAX_GRADIENT_STOPS),
+      );
       stops[3] = { color: 'nope', position: 50, opacity: 100 };
       const result = parseConfig({ gradientStops: stops });
       expect(result.config.gradientStops).toEqual(DEFAULT_CONFIG.gradientStops);
@@ -687,7 +700,9 @@ describe('serializeConfigDocument', () => {
   it('outputs 2-space indented JSON with a trailing newline, keys version/name/config', () => {
     const out = serializeConfigDocument('nine_patch', DEFAULT_CONFIG);
     expect(out.endsWith('\n')).toBe(true);
-    expect(out).toBe(`${JSON.stringify({ version: CONFIG_VERSION, name: 'nine_patch', config: DEFAULT_CONFIG }, null, 2)}\n`);
+    expect(out).toBe(
+      `${JSON.stringify({ version: CONFIG_VERSION, name: 'nine_patch', config: DEFAULT_CONFIG }, null, 2)}\n`,
+    );
     expect(Object.keys(JSON.parse(out))).toEqual(['version', 'name', 'config']);
   });
 

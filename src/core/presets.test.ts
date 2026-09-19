@@ -12,7 +12,14 @@ const SPEC_PRESETS: Preset[] = [
     id: 'focus-ring',
     label: 'Focus ring',
     fileName: 'focus_ring',
-    patch: { contentWidth: 48, contentHeight: 48, cornerRadius: 12, fillOpacity: 0, borderWidth: 4, borderColor: '#ffffff' },
+    patch: {
+      contentWidth: 48,
+      contentHeight: 48,
+      cornerRadius: 12,
+      fillOpacity: 0,
+      borderWidth: 4,
+      borderColor: '#ffffff',
+    },
   },
   {
     id: 'button',
@@ -44,7 +51,14 @@ const SPEC_PRESETS: Preset[] = [
     id: 'card',
     label: 'Card',
     fileName: 'card',
-    patch: { contentWidth: 64, contentHeight: 64, cornerRadius: 16, fillColor: '#1f1f23', borderWidth: 1, borderColor: '#3f3f46' },
+    patch: {
+      contentWidth: 64,
+      contentHeight: 64,
+      cornerRadius: 16,
+      fillColor: '#1f1f23',
+      borderWidth: 1,
+      borderColor: '#3f3f46',
+    },
   },
 ];
 

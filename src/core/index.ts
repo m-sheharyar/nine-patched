@@ -1,5 +1,15 @@
 export { hexToRgb, mixHex, normalizeHex, rgbaStr } from './color';
-export { CONFIG_VERSION, decodeConfig, encodeConfig, MAX_ENCODED_LENGTH, MAX_GRADIENT_STOPS, MIN_GRADIENT_STOPS, parseConfig, parseConfigDocument, serializeConfigDocument } from './config';
+export {
+  CONFIG_VERSION,
+  decodeConfig,
+  encodeConfig,
+  MAX_ENCODED_LENGTH,
+  MAX_GRADIENT_STOPS,
+  MIN_GRADIENT_STOPS,
+  parseConfig,
+  parseConfigDocument,
+  serializeConfigDocument,
+} from './config';
 export type { ConfigDocument, ParsedDocument, ParseResult } from './config';
 export { DEFAULT_CONFIG, DEFAULT_FILE_NAME } from './defaults';
 export { autoContentRegion, autoStretchRegion, effectiveRadius, MAX_CONTENT_SIZE, resolveNinePatch } from './geometry';

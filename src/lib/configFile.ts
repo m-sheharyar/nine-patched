@@ -8,9 +8,7 @@ export const MAX_IMPORT_BYTES = 262144;
 /** The cap on a name arriving from a link or a file, long enough for any real file name. */
 export const MAX_NAME_LENGTH = 100;
 
-export type ReadConfigResult =
-  | { ok: true; name: string; config: NinePatchConfig; issues: string[] }
-  | { ok: false };
+export type ReadConfigResult = { ok: true; name: string; config: NinePatchConfig; issues: string[] } | { ok: false };
 
 export function configFileName(name: string): string {
   return `${sanitizeFileName(name, DEFAULT_FILE_NAME)}.9patch.json`;

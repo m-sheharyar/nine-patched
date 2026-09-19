@@ -32,5 +32,4 @@ export const primaryButtonCls =
   'focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-zinc-900 ' +
   focusRing;
 
-export const checkboxCls =
-  'h-3.5 w-3.5 shrink-0 cursor-pointer accent-zinc-900 dark:accent-zinc-100 ' + focusRing;
+export const checkboxCls = 'h-3.5 w-3.5 shrink-0 cursor-pointer accent-zinc-900 dark:accent-zinc-100 ' + focusRing;

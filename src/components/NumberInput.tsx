@@ -16,7 +16,16 @@ export interface NumberInputProps {
  * A number entry that never rewrites what is being typed: the text is left alone until blur, while
  * every value handed to `onChange` is already clamped to [min, max].
  */
-export function NumberInput({ id, value, onChange, min, max, disabled, float, className = 'w-full' }: NumberInputProps) {
+export function NumberInput({
+  id,
+  value,
+  onChange,
+  min,
+  max,
+  disabled,
+  float,
+  className = 'w-full',
+}: NumberInputProps) {
   const [text, setText] = useState(String(value));
   const [focused, setFocused] = useState(false);
   const parse = (s: string) => (float ? parseFloat(s) : parseInt(s, 10));

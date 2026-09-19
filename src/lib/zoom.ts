@@ -22,10 +22,7 @@ export function fitScale(stageWidth: number, stageHeight: number, imageWidth: nu
   if (![stageWidth, stageHeight, imageWidth, imageHeight].every((n) => Number.isFinite(n) && n > 0)) {
     return MIN_ZOOM;
   }
-  const limit = Math.min(
-    (stageWidth * FIT_FRACTION) / imageWidth,
-    (stageHeight * FIT_FRACTION) / imageHeight,
-  );
+  const limit = Math.min((stageWidth * FIT_FRACTION) / imageWidth, (stageHeight * FIT_FRACTION) / imageHeight);
   const rung = [...ZOOM_STEPS].reverse().find((step) => step <= limit);
   return rung ?? MIN_ZOOM;
 }

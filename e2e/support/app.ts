@@ -46,7 +46,8 @@ const FILL_TYPE_LABELS: Record<FillType, string> = {
 export type SectionTitle = 'Geometry' | 'Fill, background & border' | '9-Patch regions' | 'Presets';
 
 /** One of the four keyboard-operable Radix sliders in the inspector. */
-export type SliderName = 'Adjust corner radius' | 'Adjust fill opacity' | 'Adjust gradient angle' | 'Adjust border width';
+export type SliderName =
+  'Adjust corner radius' | 'Adjust fill opacity' | 'Adjust gradient angle' | 'Adjust border width';
 
 /**
  * Page object for the nine-patched app. Selectors rely on `<label htmlFor>` association
@@ -233,14 +234,14 @@ export class AppPage {
 
   /** The canvas's `width`/`height` attributes — the pixel size of the export, independent of zoom. */
   async canvasSize(): Promise<{ width: number; height: number }> {
-    return this.canvas.evaluate((c) => ({ width: (c as HTMLCanvasElement).width, height: (c as HTMLCanvasElement).height }));
+    return this.canvas.evaluate((c) => ({
+      width: (c as HTMLCanvasElement).width,
+      height: (c as HTMLCanvasElement).height,
+    }));
   }
 
   async downloadNinePatch(): Promise<DownloadedNinePatch> {
-    const [download] = await Promise.all([
-      this.page.waitForEvent('download'),
-      this.downloadButton.click(),
-    ]);
+    const [download] = await Promise.all([this.page.waitForEvent('download'), this.downloadButton.click()]);
     const path = await download.path();
     if (!path) {
       throw new Error('Download event fired but no local file path was available');
@@ -251,10 +252,7 @@ export class AppPage {
 
   /** Clicks "Export config" and returns the downloaded document, parsed, plus its suggested name. */
   async downloadConfig(): Promise<{ json: unknown; suggestedFilename: string }> {
-    const [download] = await Promise.all([
-      this.page.waitForEvent('download'),
-      this.exportConfigButton.click(),
-    ]);
+    const [download] = await Promise.all([this.page.waitForEvent('download'), this.exportConfigButton.click()]);
     const path = await download.path();
     if (!path) {
       throw new Error('Download event fired but no local file path was available');

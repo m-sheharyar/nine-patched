@@ -11,7 +11,15 @@ import type { NinePatchConfig, NinePatchContext } from './types';
  * imageWidth x imageHeight is the caller's job.
  */
 export function renderNinePatch(ctx: NinePatchContext, config: NinePatchConfig): void {
-  const { contentWidth: cw, contentHeight: ch, imageWidth, imageHeight, radius, stretch, content } = resolveNinePatch(config);
+  const {
+    contentWidth: cw,
+    contentHeight: ch,
+    imageWidth,
+    imageHeight,
+    radius,
+    stretch,
+    content,
+  } = resolveNinePatch(config);
   ctx.clearRect(0, 0, imageWidth, imageHeight);
 
   const ox = 1;

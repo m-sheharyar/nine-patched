@@ -30,9 +30,7 @@ export function useNinePatchCanvas(
 
     // The frame carries the markers, not artwork, so only the content area is compared.
     const next = stretchUniformity(ctx.getImageData(1, 1, contentWidth, contentHeight), stretch);
-    setUniformity((prev) =>
-      prev.horizontal === next.horizontal && prev.vertical === next.vertical ? prev : next,
-    );
+    setUniformity((prev) => (prev.horizontal === next.horizontal && prev.vertical === next.vertical ? prev : next));
   }, [canvasRef, config]);
 
   return uniformity;

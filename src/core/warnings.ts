@@ -10,7 +10,9 @@ export function ninePatchWarnings(config: NinePatchConfig, uniformity?: StretchU
     warnings.push("No stretch markers in one or both axes — this won't scale as a 9-patch (strict tools reject it).");
   }
   if (config.shape === 'rounded' && config.cornerRadius > maxRadius) {
-    warnings.push(`Corner radius is limited to ${maxRadius}px by the current size. Increase the size to use a larger radius.`);
+    warnings.push(
+      `Corner radius is limited to ${maxRadius}px by the current size. Increase the size to use a larger radius.`,
+    );
   }
   // Advisory only: a non-uniform run still exports, it just scales unevenly.
   if (uniformity && config.stretchEnabled) {

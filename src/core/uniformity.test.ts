@@ -89,10 +89,25 @@ describe('row 21: degenerate input neither throws nor alarms', () => {
   it.each<[string, PixelGrid, Region, StretchUniformity]>([
     ['a 1px run over a fully varied grid', grid(VARIED), { x: 1, y: 1, w: 1, h: 1 }, BOTH],
     ['an empty run', grid(VARIED), { x: 0, y: 0, w: 0, h: 0 }, BOTH],
-    ['a run partly outside is checked on the part inside', grid(['aaab', 'aaab', 'aaab', 'aaab']), { x: 2, y: 0, w: 10, h: 2 }, { horizontal: false, vertical: true }],
-    ['a run partly outside never reads past the row end', grid(['baa', 'baa', 'baa']), { x: 1, y: 0, w: 10, h: 1 }, BOTH],
+    [
+      'a run partly outside is checked on the part inside',
+      grid(['aaab', 'aaab', 'aaab', 'aaab']),
+      { x: 2, y: 0, w: 10, h: 2 },
+      { horizontal: false, vertical: true },
+    ],
+    [
+      'a run partly outside never reads past the row end',
+      grid(['baa', 'baa', 'baa']),
+      { x: 1, y: 0, w: 10, h: 1 },
+      BOTH,
+    ],
     ['an empty grid', grid([]), { x: 0, y: 0, w: 2, h: 2 }, BOTH],
-    ['data shorter than the grid', { width: 4, height: 4, data: new Uint8ClampedArray(8) }, { x: 0, y: 0, w: 4, h: 4 }, BOTH],
+    [
+      'data shorter than the grid',
+      { width: 4, height: 4, data: new Uint8ClampedArray(8) },
+      { x: 0, y: 0, w: 4, h: 4 },
+      BOTH,
+    ],
   ])('%s', (_name, pixels, stretch, expected) => {
     expect(stretchUniformity(pixels, stretch)).toEqual(expected);
   });

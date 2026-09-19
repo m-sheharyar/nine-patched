@@ -41,7 +41,9 @@ export function GradientEditor({ stops, angle, onAngle, onChange }: GradientEdit
         {stops.map((s, i) => (
           <div key={i} className="rounded border border-zinc-200 p-2 dark:border-zinc-800">
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-[11px] font-medium text-zinc-500 tabular-nums dark:text-zinc-400">Stop {i + 1}</span>
+              <span className="text-[11px] font-medium text-zinc-500 tabular-nums dark:text-zinc-400">
+                Stop {i + 1}
+              </span>
               <button
                 type="button"
                 onClick={() => removeStop(i)}
@@ -75,12 +77,7 @@ export function GradientEditor({ stops, angle, onAngle, onChange }: GradientEdit
         ))}
       </div>
 
-      <button
-        type="button"
-        onClick={addStop}
-        disabled={atStopLimit}
-        className={buttonCls}
-      >
+      <button type="button" onClick={addStop} disabled={atStopLimit} className={buttonCls}>
         <Plus className="h-3.5 w-3.5" aria-hidden="true" />
         Add stop
       </button>

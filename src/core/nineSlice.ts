@@ -21,7 +21,17 @@ export interface SliceRect {
 /** The slice of a 2D context the 9-slice draw uses, generic over the image so a non-browser canvas fits. */
 export interface NineSliceContext<Image> {
   imageSmoothingEnabled: boolean;
-  drawImage(image: Image, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
+  drawImage(
+    image: Image,
+    sx: number,
+    sy: number,
+    sw: number,
+    sh: number,
+    dx: number,
+    dy: number,
+    dw: number,
+    dh: number,
+  ): void;
 }
 
 /** A length can arrive from a URL, a CLI flag or a drag, so it is floored into a drawable range. */

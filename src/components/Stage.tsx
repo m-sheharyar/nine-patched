@@ -20,7 +20,16 @@ interface StageProps {
 
 /** The artwork on its transparency backdrop, scaled to whole pixels and scrolled when it overflows. */
 export function Stage({
-  stageRef, canvasRef, contentWidth, contentHeight, stretch, content, stretchEnabled, contentEnabled, zoom, showGuides,
+  stageRef,
+  canvasRef,
+  contentWidth,
+  contentHeight,
+  stretch,
+  content,
+  stretchEnabled,
+  contentEnabled,
+  zoom,
+  showGuides,
 }: StageProps) {
   const geometry = guideGeometry({
     contentWidth,

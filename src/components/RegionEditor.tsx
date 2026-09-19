@@ -16,14 +16,27 @@ interface RegionEditorProps {
 }
 
 export function RegionEditor({
-  title, enabled, auto, region, maxW, maxH, onToggleEnabled, onSetAuto, onChange,
+  title,
+  enabled,
+  auto,
+  region,
+  maxW,
+  maxH,
+  onToggleEnabled,
+  onSetAuto,
+  onChange,
 }: RegionEditorProps) {
   const set = (patch: Partial<Region>) => onChange({ ...region, ...patch });
   return (
     <div className="rounded border border-zinc-200 p-2 dark:border-zinc-800">
       <div className="mb-2 flex items-center justify-between gap-2">
         <label className="flex min-w-0 cursor-pointer items-center gap-2 text-[12px] text-zinc-800 dark:text-zinc-200">
-          <input type="checkbox" checked={enabled} onChange={(e) => onToggleEnabled(e.target.checked)} className={checkboxCls} />
+          <input
+            type="checkbox"
+            checked={enabled}
+            onChange={(e) => onToggleEnabled(e.target.checked)}
+            className={checkboxCls}
+          />
           {title}
         </label>
         <button

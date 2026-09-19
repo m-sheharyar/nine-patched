@@ -4,7 +4,11 @@ import { clamp } from './math';
 export function normalizeHex(s: string): string | null {
   let v = s.trim().toLowerCase();
   if (v.startsWith('#')) v = v.slice(1);
-  if (/^[0-9a-f]{3}$/.test(v)) v = v.split('').map((c) => c + c).join('');
+  if (/^[0-9a-f]{3}$/.test(v))
+    v = v
+      .split('')
+      .map((c) => c + c)
+      .join('');
   if (/^[0-9a-f]{6}$/.test(v)) return '#' + v;
   return null;
 }

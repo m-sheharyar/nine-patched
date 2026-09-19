@@ -19,26 +19,26 @@ describe('ninePatchWarnings', () => {
   });
 
   it('warns when a manual stretch region has zero width', () => {
-    const warnings = ninePatchWarnings(
-      cfg({ stretchAuto: false, stretch: { x: 0, y: 0, w: 0, h: 10 } }),
-    );
+    const warnings = ninePatchWarnings(cfg({ stretchAuto: false, stretch: { x: 0, y: 0, w: 0, h: 10 } }));
     expect(warnings).toContain(
       "No stretch markers in one or both axes — this won't scale as a 9-patch (strict tools reject it).",
     );
   });
 
   it('warns when a manual stretch region has zero height', () => {
-    const warnings = ninePatchWarnings(
-      cfg({ stretchAuto: false, stretch: { x: 0, y: 0, w: 10, h: 0 } }),
-    );
+    const warnings = ninePatchWarnings(cfg({ stretchAuto: false, stretch: { x: 0, y: 0, w: 10, h: 0 } }));
     expect(warnings).toContain(
       "No stretch markers in one or both axes — this won't scale as a 9-patch (strict tools reject it).",
     );
   });
 
   it('warns when the corner radius exceeds what the current size allows', () => {
-    const warnings = ninePatchWarnings(cfg({ shape: 'rounded', contentWidth: 10, contentHeight: 10, cornerRadius: 20 }));
-    expect(warnings).toContain('Corner radius is limited to 5px by the current size. Increase the size to use a larger radius.');
+    const warnings = ninePatchWarnings(
+      cfg({ shape: 'rounded', contentWidth: 10, contentHeight: 10, cornerRadius: 20 }),
+    );
+    expect(warnings).toContain(
+      'Corner radius is limited to 5px by the current size. Increase the size to use a larger radius.',
+    );
   });
 
   it('does not warn about corner radius for non-rounded shapes even if cornerRadius is large', () => {
@@ -72,8 +72,18 @@ describe('row 22: uniformity warnings', () => {
     ['horizontal only', DEFAULT_CONFIG, { horizontal: false, vertical: true }, [HORIZONTAL]],
     ['vertical only', DEFAULT_CONFIG, { horizontal: true, vertical: false }, [VERTICAL]],
     ['both, horizontal first', DEFAULT_CONFIG, { horizontal: false, vertical: false }, [HORIZONTAL, VERTICAL]],
-    ['both, after an existing warning', cfg(small), { horizontal: false, vertical: false }, [RADIUS, HORIZONTAL, VERTICAL]],
-    ['stretch disabled ignores uniformity', cfg({ stretchEnabled: false }), { horizontal: false, vertical: false }, [NO_MARKERS]],
+    [
+      'both, after an existing warning',
+      cfg(small),
+      { horizontal: false, vertical: false },
+      [RADIUS, HORIZONTAL, VERTICAL],
+    ],
+    [
+      'stretch disabled ignores uniformity',
+      cfg({ stretchEnabled: false }),
+      { horizontal: false, vertical: false },
+      [NO_MARKERS],
+    ],
   ])('%s', (_name, config, uniformity, expected) => {
     expect(ninePatchWarnings(config, uniformity)).toEqual(expected);
   });

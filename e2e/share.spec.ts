@@ -45,7 +45,9 @@ test.describe('opening a share link', () => {
     await expect(app.widthField).toHaveValue('555');
   });
 
-  test('fields invalid in the link reset to defaults; valid fields still apply; dismiss clears it', async ({ page }) => {
+  test('fields invalid in the link reset to defaults; valid fields still apply; dismiss clears it', async ({
+    page,
+  }) => {
     const app = new AppPage(page);
     const c = encodeConfigPatch({ shape: 'triangle', contentWidth: 999999, cornerRadius: 22 });
     await page.goto(`/#c=${c}`);
@@ -202,9 +204,18 @@ function oversizeValidDocument(): Buffer {
 
 test.describe('import errors', () => {
   const cases: { label: string; file: { name: string; mimeType: string; buffer: Buffer } }[] = [
-    { label: 'a garbage text file', file: { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('not json at all') } },
-    { label: 'a json array', file: { name: 'array.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify([1, 2, 3])) } },
-    { label: 'a file larger than the limit', file: { name: 'big.json', mimeType: 'application/json', buffer: oversizeValidDocument() } },
+    {
+      label: 'a garbage text file',
+      file: { name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('not json at all') },
+    },
+    {
+      label: 'a json array',
+      file: { name: 'array.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify([1, 2, 3])) },
+    },
+    {
+      label: 'a file larger than the limit',
+      file: { name: 'big.json', mimeType: 'application/json', buffer: oversizeValidDocument() },
+    },
   ];
 
   for (const { label, file } of cases) {
@@ -227,11 +238,15 @@ test.describe('import errors', () => {
     const file = {
       name: 'partial.9patch.json',
       mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify({ version: 1, name: 'from_file', config: { shape: 'triangle', cornerRadius: 25 } })),
+      buffer: Buffer.from(
+        JSON.stringify({ version: 1, name: 'from_file', config: { shape: 'triangle', cornerRadius: 25 } }),
+      ),
     };
 
     await app.importConfigFileInput.setInputFiles(file);
-    await expect(app.notice).toContainText(/^Some settings in this file were invalid and were reset to their defaults:.*shape/);
+    await expect(app.notice).toContainText(
+      /^Some settings in this file were invalid and were reset to their defaults:.*shape/,
+    );
     await expect(app.cornerRadiusField).toHaveValue('25');
     // The input is emptied after every pick, otherwise a browser would not fire change for the same file.
     await expect(app.importConfigFileInput).toHaveValue('');
@@ -242,7 +257,9 @@ test.describe('import errors', () => {
 });
 
 test.describe('top bar at small width', () => {
-  test('the import file input is not a tab stop; the three buttons stay reachable by role at 360px', async ({ page }) => {
+  test('the import file input is not a tab stop; the three buttons stay reachable by role at 360px', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 360, height: 800 });
     const app = new AppPage(page);
     await app.goto();

@@ -25,11 +25,42 @@ interface PresetCase {
 }
 
 const PRESETS: PresetCase[] = [
-  { label: 'Focus ring', patch: { contentWidth: 48, contentHeight: 48, cornerRadius: 12, fillOpacity: 0, borderWidth: 4, borderColor: '#ffffff' } },
+  {
+    label: 'Focus ring',
+    patch: {
+      contentWidth: 48,
+      contentHeight: 48,
+      cornerRadius: 12,
+      fillOpacity: 0,
+      borderWidth: 4,
+      borderColor: '#ffffff',
+    },
+  },
   { label: 'Button', patch: { contentWidth: 48, contentHeight: 48, cornerRadius: 8, fillColor: '#ffffff' } },
-  { label: 'Ghost button', patch: { contentWidth: 48, contentHeight: 48, cornerRadius: 8, fillColor: '#ffffff', fillOpacity: 20, borderWidth: 2, borderColor: '#ffffff' } },
+  {
+    label: 'Ghost button',
+    patch: {
+      contentWidth: 48,
+      contentHeight: 48,
+      cornerRadius: 8,
+      fillColor: '#ffffff',
+      fillOpacity: 20,
+      borderWidth: 2,
+      borderColor: '#ffffff',
+    },
+  },
   { label: 'Pill', patch: { shape: 'pill', contentWidth: 96, contentHeight: 48, fillColor: '#ffffff' } },
-  { label: 'Card', patch: { contentWidth: 64, contentHeight: 64, cornerRadius: 16, fillColor: '#1f1f23', borderWidth: 1, borderColor: '#3f3f46' } },
+  {
+    label: 'Card',
+    patch: {
+      contentWidth: 64,
+      contentHeight: 64,
+      cornerRadius: 16,
+      fillColor: '#1f1f23',
+      borderWidth: 1,
+      borderColor: '#3f3f46',
+    },
+  },
 ];
 
 const PRESET_LABELS = PRESETS.map((p) => p.label);
@@ -39,10 +70,13 @@ const FIELD_ASSERTIONS: Record<string, (app: AppPage, page: Page, value: unknown
   contentWidth: (app, _page, value) => expect(app.widthField).toHaveValue(String(value)),
   contentHeight: (app, _page, value) => expect(app.heightField).toHaveValue(String(value)),
   cornerRadius: (app, _page, value) => expect(app.cornerRadiusField).toHaveValue(String(value)),
-  fillOpacity: (_app, page, value) => expect(page.getByLabel('Opacity (%)', { exact: true })).toHaveValue(String(value)),
-  borderWidth: (_app, page, value) => expect(page.getByLabel('Border width (px)', { exact: true })).toHaveValue(String(value)),
+  fillOpacity: (_app, page, value) =>
+    expect(page.getByLabel('Opacity (%)', { exact: true })).toHaveValue(String(value)),
+  borderWidth: (_app, page, value) =>
+    expect(page.getByLabel('Border width (px)', { exact: true })).toHaveValue(String(value)),
   fillColor: (_app, page, value) => expect(page.getByLabel('Fill color', { exact: true })).toHaveValue(String(value)),
-  borderColor: (_app, page, value) => expect(page.getByLabel('Border color', { exact: true })).toHaveValue(String(value)),
+  borderColor: (_app, page, value) =>
+    expect(page.getByLabel('Border color', { exact: true })).toHaveValue(String(value)),
   shape: (app, _page, value) => expect(app.shapeRadio(value as Shape)).toBeChecked(),
 };
 

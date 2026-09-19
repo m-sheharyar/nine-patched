@@ -30,7 +30,10 @@ export function StatusLine({ imageWidth, imageHeight, contentWidth, contentHeigh
               key={w}
               className="flex items-start gap-1.5 border-l-2 border-amber-600 py-0.5 pl-2 text-[11px] leading-4 text-zinc-800 dark:border-amber-400 dark:text-zinc-200"
             >
-              <TriangleAlert className="mt-px h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+              <TriangleAlert
+                className="mt-px h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-400"
+                aria-hidden="true"
+              />
               {w}
             </li>
           ))}

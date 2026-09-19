@@ -18,7 +18,13 @@ interface WorkspaceProps {
 }
 
 export function Workspace({
-  canvasRef, resolved, stretchEnabled, contentEnabled, showGuides, onShowGuidesChange, warnings,
+  canvasRef,
+  resolved,
+  stretchEnabled,
+  contentEnabled,
+  showGuides,
+  onShowGuidesChange,
+  warnings,
 }: WorkspaceProps) {
   const guidesId = useId();
   const { stageRef, zoom, isFit, zoomIn, zoomOut, fitToStage } = useZoom(resolved.imageWidth, resolved.imageHeight);
