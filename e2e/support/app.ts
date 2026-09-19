@@ -152,6 +152,38 @@ export class AppPage {
     return this.page.getByLabel('File name', { exact: true });
   }
 
+  get copyShareLinkButton(): Locator {
+    return this.page.getByRole('button', { name: 'Copy share link', exact: true });
+  }
+
+  get exportConfigButton(): Locator {
+    return this.page.getByRole('button', { name: 'Export config', exact: true });
+  }
+
+  get importConfigButton(): Locator {
+    return this.page.getByRole('button', { name: 'Import config', exact: true });
+  }
+
+  get importConfigFileInput(): Locator {
+    return this.page.getByLabel('Import config file', { exact: true });
+  }
+
+  /** The `role="status"` notice strip under the top bar; empty/absent when no notice is shown.
+   *  Narrowed to `aria-live="polite"` because `getByRole('status')` alone also matches the
+   *  unrelated "Zoom level" status span in the workspace toolbar. */
+  get notice(): Locator {
+    return this.page.getByRole('status').and(this.page.locator('[aria-live="polite"]'));
+  }
+
+  get dismissNoticeButton(): Locator {
+    return this.page.getByRole('button', { name: 'Dismiss notice', exact: true });
+  }
+
+  /** The read only, prefilled input shown when clipboard copy falls back. */
+  get shareLinkInput(): Locator {
+    return this.page.getByRole('textbox', { name: 'Share link', exact: true });
+  }
+
   shapeRadio(shape: Shape): Locator {
     return this.radio('Shape', SHAPE_LABELS[shape]);
   }
@@ -200,6 +232,20 @@ export class AppPage {
     }
     const buffer = await readFile(path);
     return { suggestedFilename: download.suggestedFilename(), png: decodePng(buffer) };
+  }
+
+  /** Clicks "Export config" and returns the downloaded document, parsed, plus its suggested name. */
+  async downloadConfig(): Promise<{ json: unknown; suggestedFilename: string }> {
+    const [download] = await Promise.all([
+      this.page.waitForEvent('download'),
+      this.exportConfigButton.click(),
+    ]);
+    const path = await download.path();
+    if (!path) {
+      throw new Error('Download event fired but no local file path was available');
+    }
+    const text = await readFile(path, 'utf8');
+    return { json: JSON.parse(text), suggestedFilename: download.suggestedFilename() };
   }
 
   async setShape(shape: Shape): Promise<void> {
