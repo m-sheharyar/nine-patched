@@ -17,14 +17,29 @@ export interface StretchUniformity {
 type PixelMatch = (a: number, b: number) => boolean;
 
 /**
+ * The largest channel difference that still counts as the same colour. Anti-aliasing is not
+ * perfectly symmetric (the two centre rows of an even sized ellipse differ by up to 8 of 255 at
+ * the edge pixels), and a difference this small is invisible once stretched. Every pixel is
+ * compared with the first of its run, so a slow gradient still adds up past this.
+ */
+export const UNIFORMITY_TOLERANCE = 16;
+
+/**
  * Pixel equality by index. The RGBA quad is compared as one 32-bit word through a DataView, which
  * unlike a Uint32Array view accepts any byteOffset, so a 2000 by 2000 grid stays around 15ms. Only
- * a mismatch pays for the alpha rule: fully transparent pixels match whatever colour data a
- * non-browser canvas left behind them.
+ * a mismatch pays for the alpha rule and the tolerance: fully transparent pixels match whatever
+ * colour data a non-browser canvas left behind them.
  */
 function pixelMatcher(data: Uint8ClampedArray, count: number): PixelMatch {
   const words = new DataView(data.buffer, data.byteOffset, count * 4);
-  return (a, b) => words.getUint32(a * 4) === words.getUint32(b * 4) || (data[a * 4 + 3] === 0 && data[b * 4 + 3] === 0);
+  const near = (i: number, j: number) => Math.abs(data[i] - data[j]) <= UNIFORMITY_TOLERANCE;
+  return (a, b) => {
+    const i = a * 4;
+    const j = b * 4;
+    if (words.getUint32(i) === words.getUint32(j)) return true;
+    if (data[i + 3] === 0 && data[j + 3] === 0) return true;
+    return near(i, j) && near(i + 1, j + 1) && near(i + 2, j + 2) && near(i + 3, j + 3);
+  };
 }
 
 /** Every column of the run matches the run's first column, over the full height. */

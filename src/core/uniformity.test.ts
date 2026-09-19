@@ -61,22 +61,23 @@ describe('row 18: a difference at the end of a loop is not missed', () => {
   });
 });
 
-describe('row 19: a difference in a single channel breaks the check', () => {
-  it.each<[string, Rgba]>([
-    ['red', [11, 20, 30, 40]],
-    ['green', [10, 21, 30, 40]],
-    ['blue', [10, 20, 31, 40]],
-    ['alpha', [10, 20, 30, 41]],
-  ])('%s only', (_name, variant) => {
-    const pixels = grid(['az', 'az'], { a: [10, 20, 30, 40], z: variant });
-    expect(stretchUniformity(pixels, PAIR).horizontal).toBe(false);
+describe('row 19: a difference past the tolerance in a single channel breaks the check', () => {
+  it.each<[string, Rgba, boolean]>([
+    ['red past', [117, 100, 100, 100], false],
+    ['green past', [100, 117, 100, 100], false],
+    ['blue past', [100, 100, 117, 100], false],
+    ['alpha past', [100, 100, 100, 117], false],
+    ['every channel at the tolerance', [116, 84, 116, 84], true],
+  ])('%s', (_name, variant, expected) => {
+    const pixels = grid(['az', 'az'], { a: [100, 100, 100, 100], z: variant });
+    expect(stretchUniformity(pixels, PAIR).horizontal).toBe(expected);
   });
 });
 
 describe('row 20: fully transparent pixels compare by alpha alone', () => {
   it.each<[string, Rgba, Rgba, boolean]>([
     ['two alpha 0 pixels with different rgb are equal', [10, 20, 30, 0], [200, 150, 100, 0], true],
-    ['alpha 0 against alpha 1 with the same rgb is not equal', [10, 20, 30, 0], [10, 20, 30, 1], false],
+    ['alpha 0 against a visible alpha with the same rgb is not equal', [10, 20, 30, 0], [10, 20, 30, 17], false],
   ])('%s', (_name, a, z, expected) => {
     expect(stretchUniformity(grid(['az', 'az'], { a, z }), PAIR).horizontal).toBe(expected);
   });
