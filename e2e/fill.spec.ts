@@ -1,0 +1,237 @@
+import { expect, test } from '@playwright/test';
+import { AppPage } from './support/app';
+import { assertValidNinePatch, getPixel, type DecodedPng } from './support/ninePatch';
+
+test.use({ colorScheme: 'light' });
+
+test.describe('solid fill', () => {
+  test('centre pixel matches the exact fill colour at full opacity', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.goto();
+    await app.setFillColor('#3366cc');
+    await app.setFillOpacity(100);
+
+    const { png } = await app.downloadNinePatch();
+    expect(getPixel(png, 41, 41)).toEqual({ r: 0x33, g: 0x66, b: 0xcc, a: 255 });
+  });
+
+  test('50% opacity halves the alpha channel and keeps the colour close to exact', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.goto();
+    await app.setFillColor('#3366cc');
+    await app.setFillOpacity(50);
+
+    const { png } = await app.downloadNinePatch();
+    const pixel = getPixel(png, 41, 41);
+    // Canvas composites via premultiplied alpha internally, so unpremultiplying a 50%-alpha
+    // fill back to straight RGBA can be off by 1 per channel — not an app bug.
+    expect(pixel.r).toBeGreaterThanOrEqual(0x32);
+    expect(pixel.r).toBeLessThanOrEqual(0x34);
+    expect(pixel.g).toBeGreaterThanOrEqual(0x65);
+    expect(pixel.g).toBeLessThanOrEqual(0x67);
+    expect(pixel.b).toBeGreaterThanOrEqual(0xcb);
+    expect(pixel.b).toBeLessThanOrEqual(0xcd);
+    expect([127, 128]).toContain(pixel.a);
+  });
+});
+
+test.describe('solid background', () => {
+  test('the content corner takes the background colour while the frame stays valid', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.goto();
+    await app.setBackground({ transparent: false, color: '#112233' });
+
+    const { png } = await app.downloadNinePatch();
+    expect(() => assertValidNinePatch(png)).not.toThrow();
+    // (1,1) is outside the default rounded shape's fill but inside the background rect.
+    expect(getPixel(png, 1, 1)).toEqual({ r: 0x11, g: 0x22, b: 0x33, a: 255 });
+  });
+});
+
+test.describe('border', () => {
+  test('a border-band pixel is the border colour, the centre is the fill colour', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.goto();
+    await app.setShape('rectangle');
+    await app.setSize(80, 80);
+    await app.setFillColor('#0000ff');
+    await app.setFillOpacity(100);
+    await app.setBorder(4, '#ff0000');
+
+    const { png } = await app.downloadNinePatch();
+    expect(getPixel(png, 3, 41)).toEqual({ r: 255, g: 0, b: 0, a: 255 });
+    expect(getPixel(png, 41, 41)).toEqual({ r: 0, g: 0, b: 255, a: 255 });
+  });
+});
+
+test('a fully transparent fill does not show the border colour through the centre', async ({ page }) => {
+  const app = new AppPage(page);
+  await app.goto();
+  await app.setShape('rounded');
+  await app.setSize(80, 80);
+  await app.setBackground({ transparent: true });
+  await app.setBorder(4, '#ff0000');
+  await app.setFillColor('#0000ff');
+  await app.setFillOpacity(0);
+
+  const { png } = await app.downloadNinePatch();
+  expect(getPixel(png, 41, 41)).toEqual({ r: 0, g: 0, b: 0, a: 0 });
+  expect(getPixel(png, 3, 41)).toEqual({ r: 255, g: 0, b: 0, a: 255 });
+});
+
+test('a 50%-opacity fill has no red mixed in at the centre', async ({ page }) => {
+  const app = new AppPage(page);
+  await app.goto();
+  await app.setShape('rounded');
+  await app.setSize(80, 80);
+  await app.setBackground({ transparent: true });
+  await app.setBorder(4, '#ff0000');
+  await app.setFillColor('#0000ff');
+  await app.setFillOpacity(50);
+
+  const { png } = await app.downloadNinePatch();
+  expect(getPixel(png, 41, 41).r).toBe(0);
+});
+
+test.describe('border ring seam', () => {
+  /** Alpha along the diagonal from the content corner (1,1) inwards to the centre. */
+  const diagonalAlphas = (png: DecodedPng) => {
+    const alphas: number[] = [];
+    for (let i = 1; i <= 41; i++) alphas.push(getPixel(png, i, i).a);
+    return alphas;
+  };
+
+  const setUpRing = async (app: AppPage, transparentBackground: boolean) => {
+    await app.goto();
+    await app.setShape('rounded');
+    await app.setSize(80, 80);
+    await app.setCornerRadius(40);
+    await app.setBackground(transparentBackground ? { transparent: true } : { transparent: false, color: '#112233' });
+    await app.setFillColor('#0000ff');
+    await app.setFillOpacity(100);
+    await app.setBorder(6, '#ff0000');
+  };
+
+  test('alpha never dips where the ring meets the fill on a curved edge', async ({ page }) => {
+    const app = new AppPage(page);
+    await setUpRing(app, true);
+
+    const { png } = await app.downloadNinePatch();
+    const alphas = diagonalAlphas(png);
+
+    for (let i = 1; i < alphas.length; i++) {
+      expect(alphas[i], `alpha dipped at diagonal pixel ${i + 1}: ${alphas.join(',')}`).toBeGreaterThanOrEqual(
+        alphas[i - 1],
+      );
+    }
+
+    const firstOpaque = alphas.indexOf(255);
+    expect(firstOpaque, `never reached full alpha: ${alphas.join(',')}`).toBeGreaterThanOrEqual(0);
+    for (const a of alphas.slice(firstOpaque)) expect(a).toBe(255);
+  });
+
+  test('every content pixel is fully opaque over a solid background', async ({ page }) => {
+    const app = new AppPage(page);
+    await setUpRing(app, false);
+
+    const { png } = await app.downloadNinePatch();
+    const translucent: string[] = [];
+    for (let y = 1; y <= 80; y++) {
+      for (let x = 1; x <= 80; x++) {
+        const { a } = getPixel(png, x, y);
+        if (a !== 255) translucent.push(`(${x},${y})=${a}`);
+      }
+    }
+    expect(translucent).toEqual([]);
+  });
+});
+
+test.describe('gradient', () => {
+  test.beforeEach(async ({ page }) => {
+    const app = new AppPage(page);
+    await app.goto();
+    await app.setFillType('gradient');
+    await app.setGradientStop(0, { color: '#ff0000', position: 0, opacity: 100 });
+    await app.setGradientStop(1, { color: '#0000ff', position: 100, opacity: 100 });
+  });
+
+  test('at 90deg, left of centre is redder and right of centre is bluer', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.setGradientAngle(90);
+
+    const { png } = await app.downloadNinePatch();
+    const left = getPixel(png, 11, 41);
+    const right = getPixel(png, 71, 41);
+    expect(left.r).toBeGreaterThan(right.r);
+    expect(left.b).toBeLessThan(right.b);
+  });
+
+  test('at 180deg, the top is redder than the bottom', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.setGradientAngle(180);
+
+    const { png } = await app.downloadNinePatch();
+    const top = getPixel(png, 41, 11);
+    const bottom = getPixel(png, 41, 71);
+    expect(top.r).toBeGreaterThan(bottom.r);
+    expect(top.b).toBeLessThan(bottom.b);
+  });
+
+  test('remove buttons are disabled at 2 stops, and enabled after adding a stop', async ({ page }) => {
+    const app = new AppPage(page);
+    await expect(app.gradientStopRemoveButtons).toHaveCount(2);
+    await expect(app.gradientStopRemoveButtons.nth(0)).toBeDisabled();
+    await expect(app.gradientStopRemoveButtons.nth(1)).toBeDisabled();
+
+    await app.addGradientStop();
+    await expect(app.gradientStopRemoveButtons).toHaveCount(3);
+    await expect(app.gradientStopRemoveButtons.nth(0)).toBeEnabled();
+    await expect(app.gradientStopRemoveButtons.nth(1)).toBeEnabled();
+    await expect(app.gradientStopRemoveButtons.nth(2)).toBeEnabled();
+  });
+
+  test('Add stop is disabled at the 12 stop limit, says why, and comes back after a removal', async ({ page }) => {
+    const app = new AppPage(page);
+    for (let i = 0; i < 10; i++) await app.addGradientStop();
+    await expect(app.gradientStopRemoveButtons).toHaveCount(12);
+    await expect(app.addGradientStopButton).toBeDisabled();
+    await expect(page.getByText('Limit of 12 stops reached.')).toBeVisible();
+
+    await app.removeGradientStop(11);
+    await expect(app.addGradientStopButton).toBeEnabled();
+    await expect(page.getByText('Limit of 12 stops reached.')).toHaveCount(0);
+  });
+
+  test('removing a stop drops it and re-enables the fewer remaining stops correctly', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.addGradientStop();
+    await expect(app.gradientStopRemoveButtons).toHaveCount(3);
+
+    await app.removeGradientStop(2);
+    await expect(app.gradientStopRemoveButtons).toHaveCount(2);
+    await expect(app.gradientStopRemoveButtons.nth(0)).toBeDisabled();
+    await expect(app.gradientStopRemoveButtons.nth(1)).toBeDisabled();
+  });
+
+  // Regression guard (should PASS today): stop editors are keyed by array index, so removing a
+  // middle stop reuses the DOM node that used to be the last stop. Each field's local text state
+  // must re-sync from the new `value` prop rather than showing stale data.
+  test('removing the middle of 3 stops leaves the remaining stops showing correct values', async ({ page }) => {
+    const app = new AppPage(page);
+    await app.setGradientStop(1, { opacity: 80 });
+    await app.addGradientStop();
+    await app.setGradientStop(2, { color: '#00ff00', position: 50, opacity: 60 });
+
+    await app.removeGradientStop(1); // removes the original stop 2 (blue, 100%, 80%)
+
+    const first = app.gradientStopFields(0);
+    await expect(first.color).toHaveValue('#ff0000');
+    await expect(first.position).toHaveValue('0');
+    await expect(first.opacity).toHaveValue('100');
+
+    const second = app.gradientStopFields(1);
+    await expect(second.color).toHaveValue('#00ff00');
+    await expect(second.position).toHaveValue('50');
+    await expect(second.opacity).toHaveValue('60');
+  });
+});

@@ -1,3 +1,92 @@
-@import "tailwindcss";
+@import 'tailwindcss' source(none);
+
+/* Scan only what ships. Left to auto-detect, Tailwind also mines the Playwright specs and the
+   unit tests for words that happen to name a utility, adding rules the app never uses. */
+@source '../index.html';
+@source './';
+@source not './**/*.test.ts';
 
 @custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background-color: #fafafa;
+}
+
+html.dark body {
+  background-color: #09090b;
+}
+
+/* Native colour inputs are drawn as a plain swatch, with the border left to the utility classes. */
+input[type='color'] {
+  padding: 0;
+}
+
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+input[type='color']::-webkit-color-swatch {
+  border: none;
+  border-radius: 2px;
+}
+
+/* The transparency backdrop. Both themes keep the tiles far enough apart to read a 50% fill.
+   Mid grey in the light theme too: on a white stage, white artwork (focus rings, buttons) vanished. */
+.checkerboard {
+  --checker-base: #a1a1aa;
+  --checker-tile: #8a8a94;
+  background-color: var(--checker-base);
+  background-image:
+    linear-gradient(45deg, var(--checker-tile) 25%, transparent 25%),
+    linear-gradient(-45deg, var(--checker-tile) 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, var(--checker-tile) 75%),
+    linear-gradient(-45deg, transparent 75%, var(--checker-tile) 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+
+/* Mid grey rather than near-black: the exported markers are pure black, and on a dark stage they
+   would vanish into it. The rest of the dark chrome stays dark. */
+html.dark .checkerboard {
+  --checker-base: #52525b;
+  --checker-tile: #71717a;
+}
+
+/* The inspector's gradient bar. It carries no black markers, so in dark mode it stays dark rather
+   than punching a mid-grey hole in the panel. */
+.checkerboard-sm {
+  background-size: 10px 10px;
+  background-position:
+    0 0,
+    0 5px,
+    5px -5px,
+    -5px 0;
+}
+
+html.dark .checkerboard-sm {
+  --checker-base: #18181b;
+  --checker-tile: #3f3f46;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
