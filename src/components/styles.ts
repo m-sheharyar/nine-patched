@@ -6,7 +6,7 @@ export const focusRing =
 /** Width is left to the caller: Tailwind's own utility order makes `w-full` beat a later `w-16`. */
 export const inputCls =
   'h-7 rounded border border-zinc-300 bg-white px-2 text-[12px] tabular-nums text-zinc-900 ' +
-  'placeholder:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-600 ' +
+  'placeholder:text-zinc-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder:text-zinc-400 ' +
   focusRing;
 
 export const labelCls = 'block text-[11px] leading-4 text-zinc-500 dark:text-zinc-400';

@@ -115,15 +115,7 @@ test.describe('accessibility scan (axe-core)', () => {
       .join('\n');
   }
 
-  // Known issue: color-contrast (serious). Reproduces in every combination below.
-  // 1. The ".9.png" filename suffix (src/components/FileNameField.tsx, text-zinc-400 /
-  //    dark:text-zinc-500) is under the 4.5:1 text contrast ratio in both themes
-  //    (measured ~2.62:1 light, ~4.12:1 dark).
-  // 2. In light mode only, the inactive "Fill type" segmented option
-  //    (src/components/SegmentedControl.tsx, text-zinc-500 on the zinc-100 track) also falls
-  //    just short, at ~4.39:1.
-  // See the reported violation details in the test output/trace for exact colors and targets.
-  test.fail('no serious/critical violations on the default page, light theme', async ({ page }) => {
+  test('no serious/critical violations on the default page, light theme', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
 
@@ -132,8 +124,7 @@ test.describe('accessibility scan (axe-core)', () => {
     expect(violations, describeViolations(violations)).toEqual([]);
   });
 
-  // Known issue: color-contrast (serious) — the ".9.png" suffix, see above.
-  test.fail('no serious/critical violations on the default page, dark theme', async ({ page }) => {
+  test('no serious/critical violations on the default page, dark theme', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
     await app.darkModeToggle.click();
@@ -144,8 +135,7 @@ test.describe('accessibility scan (axe-core)', () => {
     expect(violations, describeViolations(violations)).toEqual([]);
   });
 
-  // Known issue: color-contrast (serious), both issues above.
-  test.fail('no serious/critical violations with gradient fill selected, light theme', async ({ page }) => {
+  test('no serious/critical violations with gradient fill selected, light theme', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
     await app.setFillType('gradient');
@@ -156,8 +146,7 @@ test.describe('accessibility scan (axe-core)', () => {
     expect(violations, describeViolations(violations)).toEqual([]);
   });
 
-  // Known issue: color-contrast (serious) — the ".9.png" suffix, see above.
-  test.fail('no serious/critical violations with gradient fill selected, dark theme', async ({ page }) => {
+  test('no serious/critical violations with gradient fill selected, dark theme', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
     await app.darkModeToggle.click();

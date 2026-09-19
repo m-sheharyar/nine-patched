@@ -28,9 +28,9 @@ export function FileNameField({ value, onChange }: FileNameFieldProps) {
         title="File name"
         placeholder={DEFAULT_FILE_NAME}
         onChange={(e) => onChange(e.target.value)}
-        className="h-full min-w-0 flex-1 rounded-l bg-transparent px-2 text-[12px] text-zinc-900 outline-none placeholder:text-zinc-400 dark:text-zinc-100 dark:placeholder:text-zinc-600"
+        className="h-full min-w-0 flex-1 rounded-l bg-transparent px-2 text-[12px] text-zinc-900 outline-none placeholder:text-zinc-500 dark:text-zinc-100 dark:placeholder:text-zinc-400"
       />
-      <span className="shrink-0 text-[11px] text-zinc-400 dark:text-zinc-500">.9.png</span>
+      <span className="shrink-0 text-[11px] text-zinc-500 dark:text-zinc-400">.9.png</span>
     </div>
   );
 }

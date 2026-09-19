@@ -37,7 +37,7 @@ export function SegmentedControl<T extends string>({ label, value, options, onCh
             key={option.value}
             title={option.label}
             className={
-              'relative flex h-6 items-center justify-center rounded-sm text-[12px] text-zinc-500 transition-colors ' +
+              'relative flex h-6 items-center justify-center rounded-sm text-[12px] text-zinc-600 transition-colors ' +
               'hover:text-zinc-900 has-[:checked]:bg-white has-[:checked]:text-zinc-900 has-[:checked]:shadow-sm ' +
               'dark:text-zinc-400 dark:hover:text-zinc-100 dark:has-[:checked]:bg-zinc-700 dark:has-[:checked]:text-zinc-50 ' +
               'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-zinc-900 dark:has-[:focus-visible]:ring-zinc-100'
