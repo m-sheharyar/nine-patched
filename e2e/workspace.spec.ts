@@ -3,38 +3,44 @@ import { AppPage } from './support/app';
 
 test.use({ colorScheme: 'light' });
 
-test.describe('default zoom is Fit', () => {
+test.describe('zoom on open', () => {
   test.describe(() => {
     test.use({ viewport: { width: 1440, height: 900 } });
 
-    test('the default 82x82 image fits at 5x on a 1440x900 viewport', async ({ page }) => {
+    test('the default 66x34 image fits at 8x on a 1440x900 viewport', async ({ page }) => {
       const app = new AppPage(page);
       await app.goto();
 
       await expect(app.fitButton).toHaveAttribute('aria-pressed', 'true');
-      await expect(app.zoomLevelStatus).toHaveText('5×');
+      // Stage measures 1100x782 here; min(1100*0.6/66, 782*0.6/34) = min(10, 13.8) = 10, so the
+      // largest ladder rung at or below it is 8.
+      await expect(app.zoomLevelStatus).toHaveText('8×');
 
       const size = await app.canvasSize();
       const box = await app.canvas.boundingBox();
-      expect(box?.width).toBe(size.width * 5);
-      expect(box?.height).toBe(size.height * 5);
+      expect(box?.width).toBe(size.width * 8);
+      expect(box?.height).toBe(size.height * 8);
     });
   });
 
   test.describe(() => {
     test.use({ viewport: { width: 390, height: 844 } });
 
-    test('the default 82x82 image fits at 2x on a 390x844 viewport', async ({ page }) => {
+    test('opens at a fixed 2x on a 390x844 viewport, not Fit', async ({ page }) => {
       const app = new AppPage(page);
       await app.goto();
 
-      await expect(app.fitButton).toHaveAttribute('aria-pressed', 'true');
+      await expect(app.fitButton).toHaveAttribute('aria-pressed', 'false');
       await expect(app.zoomLevelStatus).toHaveText('2×');
 
       const size = await app.canvasSize();
       const box = await app.canvas.boundingBox();
       expect(box?.width).toBe(size.width * 2);
       expect(box?.height).toBe(size.height * 2);
+
+      // Proves the 2x is a fixed level, not a Fit value that happens to equal 2 here.
+      await app.fitButton.click();
+      await expect(app.fitButton).toHaveAttribute('aria-pressed', 'true');
     });
   });
 });
@@ -45,17 +51,18 @@ test.describe('zoom controls', () => {
   test('Zoom in / Zoom out step along the ladder and un-press Fit', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
-    expect(await app.zoomLevel()).toBe(5);
+    // Fit is 8 at this viewport (see the "zoom on open" test above).
+    expect(await app.zoomLevel()).toBe(8);
 
     await app.zoomInButton.click();
-    await expect(app.zoomLevelStatus).toHaveText('6×');
+    await expect(app.zoomLevelStatus).toHaveText('12×');
     await expect(app.fitButton).toHaveAttribute('aria-pressed', 'false');
 
     await app.zoomInButton.click();
-    await expect(app.zoomLevelStatus).toHaveText('8×');
+    await expect(app.zoomLevelStatus).toHaveText('16×');
 
     await app.zoomOutButton.click();
-    await expect(app.zoomLevelStatus).toHaveText('6×');
+    await expect(app.zoomLevelStatus).toHaveText('12×');
   });
 
   test('Zoom in clamps at 32x and disables the button', async ({ page }) => {
@@ -83,14 +90,15 @@ test.describe('zoom controls', () => {
   test('Fit restores the fit level after a manual zoom', async ({ page }) => {
     const app = new AppPage(page);
     await app.goto();
-    expect(await app.zoomLevel()).toBe(5);
+    // Fit is 8 at this viewport (see the "zoom on open" test above).
+    expect(await app.zoomLevel()).toBe(8);
 
     await app.zoomInButton.click();
-    await expect(app.zoomLevelStatus).not.toHaveText('5×');
+    await expect(app.zoomLevelStatus).not.toHaveText('8×');
     await expect(app.fitButton).toHaveAttribute('aria-pressed', 'false');
 
     await app.fitButton.click();
-    await expect(app.zoomLevelStatus).toHaveText('5×');
+    await expect(app.zoomLevelStatus).toHaveText('8×');
     await expect(app.fitButton).toHaveAttribute('aria-pressed', 'true');
   });
 
@@ -250,7 +258,7 @@ test.describe('status line', () => {
     await app.goto();
 
     await expect(app.validStatus).toBeVisible();
-    await expect(page.getByText('Exported file: 82 × 82 px (content 80 × 80 + 1px 9-patch frame)')).toBeVisible();
+    await expect(page.getByText('Exported file: 66 × 34 px (content 64 × 32 + 1px 9-patch frame)')).toBeVisible();
     await expect(app.warnings).toHaveCount(0);
   });
 

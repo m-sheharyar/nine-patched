@@ -32,20 +32,22 @@ test.describe('default 9-patch export', () => {
     const { suggestedFilename, png } = await app.downloadNinePatch();
 
     expect(suggestedFilename).toBe('nine_patch.9.png');
-    expect(png.width).toBe(82);
-    expect(png.height).toBe(82);
+    // Default content 64x32 plus a 1px frame on each side.
+    expect(png.width).toBe(66);
+    expect(png.height).toBe(34);
 
     expect(() => assertValidNinePatch(png)).not.toThrow();
 
-    const expectedRun = [{ start: 13, end: 68 }];
+    // Auto stretch/content region for the default (64x32, radius 8) is { x: 8, y: 8, w: 48, h: 16 },
+    // offset by the 1px frame.
     const markers = readMarkers(png);
-    expect(markers.top).toEqual(expectedRun);
-    expect(markers.left).toEqual(expectedRun);
-    expect(markers.bottom).toEqual(expectedRun);
-    expect(markers.right).toEqual(expectedRun);
+    expect(markers.top).toEqual([{ start: 9, end: 56 }]);
+    expect(markers.bottom).toEqual([{ start: 9, end: 56 }]);
+    expect(markers.left).toEqual([{ start: 9, end: 24 }]);
+    expect(markers.right).toEqual([{ start: 9, end: 24 }]);
 
-    // Centre of the fill: default solid colour #4caf50, fully opaque.
-    expect(getPixel(png, 41, 41)).toEqual({ r: 76, g: 175, b: 80, a: 255 });
+    // Centre of the fill (33, 17): default solid colour #4caf50, fully opaque.
+    expect(getPixel(png, 33, 17)).toEqual({ r: 76, g: 175, b: 80, a: 255 });
 
     // Content corner (1,1): outside the rounded-rect radius, so still transparent.
     expect(getPixel(png, 1, 1)).toEqual({ r: 0, g: 0, b: 0, a: 0 });

@@ -2,9 +2,9 @@ import type { NinePatchConfig } from './types';
 
 export const DEFAULT_CONFIG: NinePatchConfig = {
   shape: 'rounded',
-  contentWidth: 80,
-  contentHeight: 80,
-  cornerRadius: 12,
+  contentWidth: 64,
+  contentHeight: 32,
+  cornerRadius: 8,
   fillType: 'solid',
   fillColor: '#4caf50',
   fillOpacity: 100,

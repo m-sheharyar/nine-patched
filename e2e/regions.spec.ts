@@ -7,6 +7,7 @@ test.use({ colorScheme: 'light' });
 test('a manual stretch region produces exactly matching top/left marker runs', async ({ page }) => {
   const app = new AppPage(page);
   await app.goto();
+  await app.setSize(80, 80); // not the default: room for the region below without clamping
   await app.toggleRegionAuto('stretch');
   await app.setRegion('stretch', { x: 10, y: 5, w: 20, h: 30 });
 

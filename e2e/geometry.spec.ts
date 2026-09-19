@@ -13,8 +13,9 @@ for (const shape of SHAPES) {
     await app.setShape(shape);
 
     const { png } = await app.downloadNinePatch();
-    expect(png.width).toBe(82);
-    expect(png.height).toBe(82);
+    // Default content 64x32 plus a 1px frame on each side.
+    expect(png.width).toBe(66);
+    expect(png.height).toBe(34);
     expect(() => assertValidNinePatch(png)).not.toThrow();
 
     // Only a plain rectangle has no corner rounding, so only it fills the content corner.

@@ -1,5 +1,7 @@
 export const MIN_ZOOM = 1;
 export const MAX_ZOOM = 32;
+/** Below the desktop layout the stage opens at this level rather than Fit, which lands too large on a phone. */
+export const SMALL_SCREEN_ZOOM = 2;
 
 /**
  * The zoom ladder the +/- buttons walk. Every step is an integer so the canvas keeps landing on
