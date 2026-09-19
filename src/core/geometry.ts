@@ -12,6 +12,15 @@ export function effectiveRadius(shape: Shape, w: number, h: number, cornerRadius
   return clamp(cornerRadius, 0, maxR);
 }
 
+/**
+ * The radius the auto regions are cut by. A link or a file can carry a fractional radius: the curve
+ * is drawn exactly, but a marker must start on a whole pixel or its first pixel comes out grey.
+ * Rounded up, so the stretch run stays on the flat edge and the content box inside the shape.
+ */
+function markerRadius(shape: Shape, w: number, h: number, cornerRadius: number) {
+  return Math.ceil(effectiveRadius(shape, w, h, cornerRadius));
+}
+
 /** A config can arrive from a URL or a CLI flag, so a dimension is forced into a renderable range. */
 function contentDimension(value: number): number {
   return clamp(Math.floor(value), 1, MAX_CONTENT_SIZE);
@@ -47,7 +56,7 @@ const ellipseInset = (size: number) => Math.ceil((size / 2) * (1 - Math.SQRT1_2)
  * strip, so every shape still scales instead of losing its marker altogether.
  */
 export function autoStretchRegion(shape: Shape, w: number, h: number, cornerRadius: number): Region {
-  const r = effectiveRadius(shape, w, h, cornerRadius);
+  const r = markerRadius(shape, w, h, cornerRadius);
   const curved = shape === 'ellipse';
   const x = stretchAxis(w, r, curved);
   const y = stretchAxis(h, r, curved);
@@ -56,7 +65,7 @@ export function autoStretchRegion(shape: Shape, w: number, h: number, cornerRadi
 
 /** The content/padding box: the largest area inner text or icons can use without leaving the shape. */
 export function autoContentRegion(shape: Shape, w: number, h: number, cornerRadius: number): Region {
-  const r = effectiveRadius(shape, w, h, cornerRadius);
+  const r = markerRadius(shape, w, h, cornerRadius);
   // A square pill draws as a circle, so it takes the ellipse's inscribed rectangle too.
   if (shape === 'ellipse' || (shape === 'pill' && w === h)) return insetRegion(w, h, ellipseInset(w), ellipseInset(h));
   // A pill's radius spans its short axis entirely, so only the longer axis is inset by it.

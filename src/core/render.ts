@@ -61,6 +61,13 @@ export function renderNinePatch(ctx: NinePatchContext, config: NinePatchConfig):
   }
   ctx.globalCompositeOperation = 'source-over';
 
+  // Where a curve touches the edge of the artwork, anti-aliasing can leave a pixel of alpha 1 to 16
+  // on the frame. The frame may only hold transparent or opaque black pixels, so it is wiped first.
+  ctx.clearRect(0, 0, imageWidth, 1);
+  ctx.clearRect(0, imageHeight - 1, imageWidth, 1);
+  ctx.clearRect(0, 0, 1, imageHeight);
+  ctx.clearRect(imageWidth - 1, 0, 1, imageHeight);
+
   ctx.fillStyle = '#000000';
   if (config.stretchEnabled) {
     const sx = clamp(stretch.x, 0, cw);

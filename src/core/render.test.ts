@@ -100,6 +100,30 @@ describe('renderNinePatch', () => {
     });
   });
 
+  it('wipes the four frame strips after the artwork and before the markers', () => {
+    const { ctx, events } = createRecordingContext();
+    renderNinePatch(ctx, cfg({ bgTransparent: false, backgroundColor: '#123456' }));
+
+    const calls = callEvents(events);
+    const wipes = calls.filter((e) => e.name === 'clearRect').slice(1);
+    // Image is 66x34: top row, bottom row, left column, right column.
+    expect(wipes.map((e) => e.args)).toEqual([
+      [0, 0, 66, 1],
+      [0, 33, 66, 1],
+      [0, 0, 1, 34],
+      [65, 0, 1, 34],
+    ]);
+
+    const firstWipe = calls.indexOf(wipes[0]);
+    const lastWipe = calls.indexOf(wipes[3]);
+    const background = calls.findIndex((e) => e.name === 'fillRect' && e.composite === 'destination-over');
+    const firstMarker = calls.findIndex((e) => e.name === 'fillRect' && e.fillStyle === '#000000');
+    expect(calls.map((e) => e.name).lastIndexOf('fill')).toBeLessThan(firstWipe);
+    expect(background).toBeGreaterThan(-1);
+    expect(background).toBeLessThan(firstWipe);
+    expect(firstMarker).toBeGreaterThan(lastWipe);
+  });
+
   it('draws exactly the expected marker fillRects for the default config, in black', () => {
     const { ctx, events } = createRecordingContext();
     renderNinePatch(ctx, DEFAULT_CONFIG);
