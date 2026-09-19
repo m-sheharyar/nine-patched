@@ -114,11 +114,16 @@ test.describe('url sync while editing', () => {
 });
 
 test.describe('copy share link', () => {
-  test('with clipboard permission, copies the on-screen state immediately and shows "Link copied"', async ({
-    page,
-    context,
-  }) => {
-    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  test('with a working clipboard, copies the on-screen state immediately and shows "Link copied"', async ({ page }) => {
+    // A recording clipboard rather than the real one: only Chromium lets a test grant clipboard
+    // permissions, and what is under test is the text the app hands over, not the browser.
+    await page.addInitScript(() => {
+      const copied: string[] = [];
+      Object.defineProperty(window, '__copied', { value: copied });
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: async (text: string) => void copied.push(text) },
+      });
+    });
     const app = new AppPage(page);
     await app.goto();
     const base = new URL(page.url());
@@ -128,9 +133,9 @@ test.describe('copy share link', () => {
     await app.copyShareLinkButton.click();
 
     await expect(app.notice).toContainText('Link copied');
-    const clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+    const copied = await page.evaluate(() => (window as unknown as { __copied: string[] }).__copied);
     const expected = `${base.origin}${base.pathname}${base.search}#c=${encodeConfigPatch({ cornerRadius: 15 })}`;
-    expect(clipboardText).toBe(expected);
+    expect(copied).toEqual([expected]);
   });
 
   test('without the clipboard api, focuses a prefilled read only "Share link" input', async ({ page }) => {
