@@ -33,7 +33,7 @@ export function Stage({
   });
 
   return (
-    <div ref={stageRef} className="checkerboard min-h-0 min-w-0 flex-1 overflow-auto">
+    <div ref={stageRef} data-testid="source-stage" className="checkerboard min-h-0 min-w-0 flex-1 overflow-auto">
       {/* max-content sizing, so an artwork larger than the stage stays fully scrollable rather
           than overflowing past the left and top edges the way plain centring would. */}
       <div

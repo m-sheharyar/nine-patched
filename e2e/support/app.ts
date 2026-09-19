@@ -62,9 +62,13 @@ export class AppPage {
     return this.page.getByRole('heading', { name: 'nine-patched' });
   }
 
+  get sourceStage(): Locator {
+    return this.workspace.getByTestId('source-stage');
+  }
+
   get canvas() {
-    // Scoped to the workspace: the inspector's preset thumbnails are canvases too.
-    return this.workspace.locator('canvas');
+    // Scoped to the source stage: the preset thumbnails and the stretched preview are canvases too.
+    return this.sourceStage.locator('canvas');
   }
 
   get downloadButton() {
@@ -142,7 +146,7 @@ export class AppPage {
 
   /** The stage's checkerboard backdrop, for reading theme-dependent computed styles. */
   get stageBackground(): Locator {
-    return this.workspace.locator('.checkerboard');
+    return this.sourceStage;
   }
 
   get validStatus(): Locator {
