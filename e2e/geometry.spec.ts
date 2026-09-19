@@ -128,3 +128,21 @@ test('typing -5 into Width without blurring still keeps the canvas at the minimu
   await app.widthField.fill('-5');
   await expect(app.canvas).toHaveAttribute('width', '3');
 });
+
+test('a square pill says it draws as a circle, and only then', async ({ page }) => {
+  const app = new AppPage(page);
+  await app.goto();
+  const hint = page.getByText('At equal width and height a pill is a circle.');
+
+  await app.setSize(80, 80);
+  await expect(hint).toHaveCount(0);
+  await app.setShape('pill');
+  await expect(hint).toBeVisible();
+
+  await app.setShape('ellipse');
+  await expect(hint).toHaveCount(0);
+
+  await app.setShape('pill');
+  await app.setSize(120, 80);
+  await expect(hint).toHaveCount(0);
+});
