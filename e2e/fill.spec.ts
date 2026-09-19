@@ -190,6 +190,18 @@ test.describe('gradient', () => {
     await expect(app.gradientStopRemoveButtons.nth(2)).toBeEnabled();
   });
 
+  test('Add stop is disabled at the 12 stop limit, says why, and comes back after a removal', async ({ page }) => {
+    const app = new AppPage(page);
+    for (let i = 0; i < 10; i++) await app.addGradientStop();
+    await expect(app.gradientStopRemoveButtons).toHaveCount(12);
+    await expect(app.addGradientStopButton).toBeDisabled();
+    await expect(page.getByText('Limit of 12 stops reached.')).toBeVisible();
+
+    await app.removeGradientStop(11);
+    await expect(app.addGradientStopButton).toBeEnabled();
+    await expect(page.getByText('Limit of 12 stops reached.')).toHaveCount(0);
+  });
+
   test('removing a stop drops it and re-enables the fewer remaining stops correctly', async ({ page }) => {
     const app = new AppPage(page);
     await app.addGradientStop();

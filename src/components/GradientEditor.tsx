@@ -1,5 +1,5 @@
 import { Plus, Trash2 } from 'lucide-react';
-import { cssGradient, insertGradientStop, type GradientStop } from '@/core';
+import { cssGradient, insertGradientStop, MAX_GRADIENT_STOPS, type GradientStop } from '@/core';
 import { ColorField } from './ColorField';
 import { NumberField } from './NumberField';
 import { SliderField } from './SliderField';
@@ -15,6 +15,7 @@ interface GradientEditorProps {
 export function GradientEditor({ stops, angle, onAngle, onChange }: GradientEditorProps) {
   const updateStop = (i: number, patch: Partial<GradientStop>) =>
     onChange(stops.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
+  const atStopLimit = stops.length >= MAX_GRADIENT_STOPS;
   const addStop = () => onChange(insertGradientStop(stops));
   const removeStop = (i: number) => {
     if (stops.length > 2) onChange(stops.filter((_, idx) => idx !== i));
@@ -74,10 +75,19 @@ export function GradientEditor({ stops, angle, onAngle, onChange }: GradientEdit
         ))}
       </div>
 
-      <button type="button" onClick={addStop} className={buttonCls}>
+      <button
+        type="button"
+        onClick={addStop}
+        disabled={atStopLimit}
+        className={buttonCls}
+      >
         <Plus className="h-3.5 w-3.5" aria-hidden="true" />
         Add stop
       </button>
+      {/* Visible text, not a title: a disabled button takes no pointer events, so a tooltip never shows. */}
+      {atStopLimit && (
+        <p className="text-[11px] text-zinc-500 dark:text-zinc-400">Limit of {MAX_GRADIENT_STOPS} stops reached.</p>
+      )}
     </div>
   );
 }
