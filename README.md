@@ -81,4 +81,4 @@ npm run test:e2e       # Playwright end to end tests (Chromium)
 
 ## License
 
-MIT, see [LICENSE](LICENSE). Copyright (c) 2026 Muhammad Sheharyar (Sherrylio).
+MIT, see [LICENSE](LICENSE). Copyright (c) 2026 Muhammad Sheharyar (m-sheharyar).
