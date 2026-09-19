@@ -1,16 +1,26 @@
-import type { NinePatchConfig, ResolvedNinePatch } from '@/core';
+import type { NinePatchConfig, Preset, ResolvedNinePatch } from '@/core';
 import { FillSection } from './FillSection';
 import { GeometrySection } from './GeometrySection';
+import { PresetsSection } from './PresetsSection';
 import { RegionsSection } from './RegionsSection';
 
 interface InspectorProps {
   config: NinePatchConfig;
   resolved: ResolvedNinePatch;
+  activePreset: Preset | null;
   onChange: (patch: Partial<NinePatchConfig>) => void;
   onDimensionChange: (key: 'contentWidth' | 'contentHeight', value: number) => void;
+  onApplyPreset: (preset: Preset) => void;
 }
 
-export function Inspector({ config, resolved, onChange, onDimensionChange }: InspectorProps) {
+export function Inspector({
+  config,
+  resolved,
+  activePreset,
+  onChange,
+  onDimensionChange,
+  onApplyPreset,
+}: InspectorProps) {
   return (
     <aside
       aria-label="Inspector"
@@ -19,6 +29,7 @@ export function Inspector({ config, resolved, onChange, onDimensionChange }: Ins
         'lg:w-[340px] lg:overflow-y-auto lg:border-t-0 lg:border-l'
       }
     >
+      <PresetsSection activePreset={activePreset} onApply={onApplyPreset} />
       <GeometrySection
         config={config}
         radius={resolved.radius}

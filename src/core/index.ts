@@ -7,6 +7,8 @@ export type { ResolvedNinePatch } from './geometry';
 export { cssGradient, gradientLine, insertGradientStop, makeGradient, sortedStops } from './gradient';
 export type { GradientLine } from './gradient';
 export { clamp, clampRegion } from './math';
+export { findActivePreset, PRESETS, presetConfig } from './presets';
+export type { Preset } from './presets';
 export { renderNinePatch } from './render';
 export { roundedRectPath, shapePath } from './shapes';
 export type { FillType, GradientStop, NinePatchConfig, NinePatchContext, Region, Shape } from './types';

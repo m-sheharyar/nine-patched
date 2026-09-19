@@ -43,7 +43,7 @@ const FILL_TYPE_LABELS: Record<FillType, string> = {
 };
 
 /** The h2 title inside each collapsible `<details>` section of the inspector. */
-export type SectionTitle = 'Geometry' | 'Fill, background & border' | '9-Patch regions';
+export type SectionTitle = 'Geometry' | 'Fill, background & border' | '9-Patch regions' | 'Presets';
 
 /** One of the four keyboard-operable Radix sliders in the inspector. */
 export type SliderName = 'Adjust corner radius' | 'Adjust fill opacity' | 'Adjust gradient angle' | 'Adjust border width';
@@ -63,7 +63,8 @@ export class AppPage {
   }
 
   get canvas() {
-    return this.page.locator('canvas');
+    // Scoped to the workspace: the inspector's preset thumbnails are canvases too.
+    return this.workspace.locator('canvas');
   }
 
   get downloadButton() {
@@ -179,6 +180,11 @@ export class AppPage {
     return this.page.getByRole('button', { name: 'Dismiss notice', exact: true });
   }
 
+  /** The notice's optional action button, currently only shown after applying a preset. */
+  get undoButton(): Locator {
+    return this.page.getByRole('button', { name: 'Undo', exact: true });
+  }
+
   /** The read only, prefilled input shown when clipboard copy falls back. */
   get shareLinkInput(): Locator {
     return this.page.getByRole('textbox', { name: 'Share link', exact: true });
@@ -190,6 +196,11 @@ export class AppPage {
 
   fillTypeRadio(type: FillType): Locator {
     return this.radio('Fill type', FILL_TYPE_LABELS[type]);
+  }
+
+  /** A button in the Presets grid, found by its visible label (e.g. `presetButton('Focus ring')`). */
+  presetButton(label: string): Locator {
+    return this.page.getByRole('button', { name: `Apply ${label} preset`, exact: true });
   }
 
   slider(name: SliderName): Locator {

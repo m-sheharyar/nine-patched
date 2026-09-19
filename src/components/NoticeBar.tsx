@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { iconButtonCls, inputCls } from './styles';
+import { buttonCls, iconButtonCls, inputCls } from './styles';
 
 export interface Notice {
   text: string;
@@ -8,6 +8,8 @@ export interface Notice {
   link?: string;
   /** A confirmation, which clears itself rather than waiting to be dismissed. */
   autoHide?: boolean;
+  /** A second action alongside dismiss, e.g. "Undo" right after applying a preset. */
+  action?: { label: string; onClick: () => void };
 }
 
 const AUTO_HIDE_MS = 3000;
@@ -74,6 +76,11 @@ export function NoticeBar({ notice, onDismiss }: NoticeBarProps) {
               onFocus={(e) => e.currentTarget.select()}
               className={`${inputCls} min-w-0 grow basis-full sm:basis-56`}
             />
+          )}
+          {notice.action !== undefined && (
+            <button type="button" onClick={notice.action.onClick} className={buttonCls}>
+              {notice.action.label}
+            </button>
           )}
           <button
             type="button"

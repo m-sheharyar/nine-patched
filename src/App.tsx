@@ -15,6 +15,7 @@ import {
 import type { NinePatchConfig } from '@/core';
 import { initialShareState, useConfigUrlSync } from '@/hooks/useConfigUrlSync';
 import { useNinePatchCanvas } from '@/hooks/useNinePatchCanvas';
+import { usePresets } from '@/hooks/usePresets';
 import { useTheme } from '@/hooks/useTheme';
 import { configFileName, MAX_IMPORT_BYTES, readConfigText } from '@/lib/configFile';
 import { downloadBlob } from '@/lib/downloadBlob';
@@ -42,6 +43,7 @@ export default function App() {
   }, []);
 
   const { shareUrl, clearHash } = useConfigUrlSync({ config, fileName, onExternalChange: applyShared });
+  const { activePreset, applyPreset } = usePresets({ config, fileName, setConfig, setFileName, setNotice });
 
   const dismissNotice = useCallback(() => setNotice(null), []);
 
@@ -131,7 +133,14 @@ export default function App() {
           onShowGuidesChange={setShowGuides}
           warnings={warnings}
         />
-        <Inspector config={config} resolved={resolved} onChange={update} onDimensionChange={setDimension} />
+        <Inspector
+          config={config}
+          resolved={resolved}
+          activePreset={activePreset}
+          onChange={update}
+          onDimensionChange={setDimension}
+          onApplyPreset={applyPreset}
+        />
       </main>
     </div>
   );
