@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MAX_GRADIENT_STOPS } from './config';
 import { cssGradient, gradientLine, insertGradientStop, sortedStops } from './gradient';
 import type { GradientStop } from './types';
 
@@ -139,6 +140,18 @@ describe('insertGradientStop', () => {
     const single: GradientStop[] = [{ color: '#ff0000', position: 0, opacity: 100 }];
     expect(insertGradientStop(single)).toEqual(single);
     expect(insertGradientStop([])).toEqual([]);
+  });
+
+  it('returns the sorted list unchanged, with no new stop, once MAX_GRADIENT_STOPS is reached', () => {
+    const stops: GradientStop[] = Array.from({ length: MAX_GRADIENT_STOPS }, (_, i) => ({
+      color: '#000000',
+      position: (i * 100) / (MAX_GRADIENT_STOPS - 1),
+      opacity: 100,
+    }));
+    const shuffled = [stops[stops.length - 1], ...stops.slice(0, -1)]; // out of order, to prove it still sorts
+    const result = insertGradientStop(shuffled);
+    expect(result).toHaveLength(MAX_GRADIENT_STOPS);
+    expect(result).toEqual(sortedStops(stops));
   });
 });
 

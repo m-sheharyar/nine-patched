@@ -1,4 +1,5 @@
 import { mixHex, rgbaStr } from './color';
+import { MAX_GRADIENT_STOPS, MIN_GRADIENT_STOPS } from './config';
 import { clamp } from './math';
 import type { GradientStop, NinePatchContext } from './types';
 
@@ -37,11 +38,12 @@ export function sortedStops(stops: GradientStop[]): GradientStop[] {
 /**
  * Sorted stops with one more stop halfway across the widest gap, blended from the two stops it
  * sits between, so adding a stop never lands on a position another stop already occupies.
- * Returns the stops untouched when there is no gap to split (fewer than two stops).
+ * Returns the sorted stops untouched when there is no gap to split (fewer than two stops) or the
+ * list is already at `MAX_GRADIENT_STOPS`, the cap the file format and the editor share.
  */
 export function insertGradientStop(stops: GradientStop[]): GradientStop[] {
   const sorted = sortedStops(stops);
-  if (sorted.length < 2) return sorted;
+  if (sorted.length < MIN_GRADIENT_STOPS || sorted.length >= MAX_GRADIENT_STOPS) return sorted;
 
   let at = 0;
   let widest = -Infinity;
